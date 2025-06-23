@@ -1,4 +1,16 @@
-import { ArrowUpDown, BarChart3, Calendar, Home, Inbox, Package, Search, Settings, ShoppingCart, Users } from "lucide-react"
+import {
+  ArrowUpDown,
+  BarChart3,
+  Calendar,
+  Home,
+  Inbox,
+  Package,
+  Search,
+  Settings,
+  Shield,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -6,27 +18,42 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // Menu items.
 
 const items = [
-  { name: 'Dashboard', url: '/', icon: Home },
-  { name: 'Quick Sales', url: '/sales', icon: ShoppingCart },
-  { name: 'Inventory', url: '/inventory', icon: Package },
-  { name: 'Products', url: '/products', icon: BarChart3 },
-  { name: 'Transfers', url: '/transfers', icon: ArrowUpDown },
-  { name: 'Customers', url: '/customers', icon: Users },
-  { name: 'Settings', url: '/settings', icon: Settings },
-]
-
+  { name: "Dashboard", url: "/", icon: Home },
+  { name: "Quick Sales", url: "/sales", icon: ShoppingCart },
+  { name: "Inventory", url: "/inventory", icon: Package },
+  { name: "Products", url: "/products", icon: BarChart3 },
+  { name: "Transfers", url: "/transfers", icon: ArrowUpDown },
+  { name: "Customers", url: "/customers", icon: Users },
+  { name: "Settings", url: "/settings", icon: Settings },
+];
 
 export function AppSidebar() {
   return (
     <Sidebar>
+      <SidebarHeader className="border-b border-gray-200/60 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted shadow-sm">
+            <Shield className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-text tracking-tight">
+              Admin Console
+            </h1>
+            <p className="text-sm text-text/50 font-medium">
+              System Management
+            </p>
+          </div>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -47,5 +74,5 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }

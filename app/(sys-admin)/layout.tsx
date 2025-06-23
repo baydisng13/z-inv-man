@@ -32,7 +32,12 @@ export default async function Layout({
       <AppSidebar />
       <main className="flex flex-col gap-4 w-full h-screen">
         <Header />
-        
+        <header className="flex justify-between items-center gap-4 p-4 ">
+          <div className="flex gap-4 items-center">
+            <span className="text-lg font-bold">Dashboard</span>
+          </div>
+          <div className="flex gap-4 items-center"></div>
+        </header>
         {children}
       </main>
     </SidebarProvider>
