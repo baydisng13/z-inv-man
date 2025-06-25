@@ -26,6 +26,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "./ui/sidebar";
 import { authClient, useSession } from "@/lib/auth-client";
+import { ModeToggle } from "./mode-toggle";
 
 // interface HeaderProps {} // Unused interface removed
 
@@ -181,6 +182,9 @@ export function Header() {
               3
             </span>
           </Button> */}
+
+          {/* theme switcher */}
+          <ModeToggle />
 
           {/* Profile dropdown */}
           {session && 
