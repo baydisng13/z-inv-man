@@ -1,6 +1,7 @@
 "use client"; // Required for Next.js App Router client components
 
-import React, { useState, useEffect, ChangeEvent, KeyboardEvent } from 'react';
+import React, { useState, ChangeEvent, KeyboardEvent } from 'react'; // Removed useEffect
+import Image from 'next/image'; // Added for next/image
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -123,7 +124,9 @@ const POSPage = () => {
                 <h3 className="text-lg font-semibold">{foundProduct.name}</h3>
                 <p>Price: ${foundProduct.price.toFixed(2)}</p>
                 {foundProduct.imageUrl && (
-                    <img src={foundProduct.imageUrl} alt={foundProduct.name} className="w-full h-auto rounded-md object-cover max-h-48" />
+                  <div className="relative w-full h-48 rounded-md overflow-hidden my-2">
+                    <Image src={foundProduct.imageUrl} alt={foundProduct.name} layout="fill" objectFit="cover" />
+                  </div>
                 )}
                 <div className="flex items-center space-x-2">
                   <label htmlFor="quantityInput" className="text-sm">Quantity:</label>

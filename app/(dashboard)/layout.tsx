@@ -1,10 +1,10 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Header } from "@/components/header";
-import { authClient } from "@/lib/auth-client";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+// import { authClient } from "@/lib/auth-client"; // Unused
+// import { redirect } from "next/navigation"; // Unused
+// import { auth } from "@/lib/auth"; // Unused
+// import { headers } from "next/headers"; // Unused
 
 export default async function Layout({
   children,
