@@ -6,7 +6,7 @@ export default async function Layout({
 }: {
   children: React.ReactElement;
 }) {
-  const { data: session, error } = await authClient.getSession();
+  const { data: session } = await authClient.getSession(); // Removed unused 'error'
 
   if (session?.user?.name) {
     redirect('/app')

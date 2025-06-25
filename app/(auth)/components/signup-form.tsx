@@ -14,13 +14,13 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { authClient, signUp } from "@/lib/auth-client";
+import { signUp } from "@/lib/auth-client"; // Removed authClient
 import { toast } from "sonner";
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { auth } from "@/lib/auth";
+// import { useRouter } from "next/navigation"; // Unused
+// import { auth } from "@/lib/auth"; // Removed auth
 
 const formSchema = z
   .object({
@@ -40,6 +40,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  // const router = useRouter(); // router was unused
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<FormDataType>({
     resolver: zodResolver(formSchema),
@@ -54,7 +55,7 @@ export function SignUpForm({
   const onSubmit = async (values: FormDataType) => {
     const { name, email, password } = values;
     setIsLoading(true);
-    const {push} = useRouter()
+    // const {push} = useRouter() // Removed: useRouter was moved, and push was unused.
 
     await signUp.email(
       {
