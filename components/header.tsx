@@ -243,9 +243,7 @@ export function Header() {
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign out
               </DropdownMenuItem>
-              <pre>
-                {JSON.stringify({active_org_id :session.session.activeOrganizationId}, null, 2)} 
-              </pre>
+      
             </DropdownMenuContent>
           </DropdownMenu>}
         </div>
