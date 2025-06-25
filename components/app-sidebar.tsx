@@ -1,16 +1,4 @@
-import {
-  ArrowUpDown,
-  BarChart3,
-  Calendar,
-  Home,
-  Inbox,
-  Package,
-  Search,
-  Settings,
-  Shield,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
+import { ArrowUpDown, BarChart3, Home, Package, Settings, Shield, ShoppingCart, Users } from "lucide-react" // Removed Calendar, Inbox, Search
 
 import {
   Sidebar,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  Menu,
+  // Menu, // Unused
   ChevronDown,
   Check,
   Building2,
@@ -10,7 +10,7 @@ import {
   User,
   Settings,
   LogOut,
-  Bell,
+  // Bell, // Unused
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge"; // Unused
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "./ui/sidebar";
 import { authClient, useSession } from "@/lib/auth-client";
+import { ModeToggle } from "./mode-toggle";
 
-interface HeaderProps {}
+// interface HeaderProps {} // Unused interface removed
 
 const organizationss = [
   { id: 1, name: "Addis Stationery Co.", plan: "Pro" },
@@ -181,6 +182,9 @@ export function Header() {
               3
             </span>
           </Button> */}
+
+          {/* theme switcher */}
+          <ModeToggle />
 
           {/* Profile dropdown */}
           {session && 

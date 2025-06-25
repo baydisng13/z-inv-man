@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { LoginForm } from "../components/login-form";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils"; // Unused
+import Image from "next/image"; // Added for next/image
 
 export default function LoginPage() {
   return (
@@ -11,10 +12,12 @@ export default function LoginPage() {
             <CardContent className="grid p-0 md:grid-cols-2 items-center h-full">
               <LoginForm />
               <div className="relative hidden bg-muted md:block h-full">
-                <img
+                <Image
                   src="/store.jpg"
                   alt="Image"
-                  className="absolute inset-0 h-full w-full object-cover "
+                  layout="fill"
+                  objectFit="cover"
+                  className="absolute inset-0 h-full w-full" // className might be redundant with layout="fill" but good for potential overrides
                 />
               </div>
             </CardContent>
