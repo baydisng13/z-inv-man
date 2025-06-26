@@ -1,5 +1,5 @@
 /* 
-Here’s how you can explain to a developer how to build all features in your system, using the pattern shown in your `NewsStory` API module.  
+Here’s how to build any features in your system.  
 **An example is included at the end.**
 
 ---
