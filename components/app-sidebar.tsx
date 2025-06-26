@@ -1,4 +1,4 @@
-import { ArrowUpDown, BarChart3, Home, Package, Settings, Shield, ShoppingCart, Users } from "lucide-react" // Removed Calendar, Inbox, Search
+import { ArrowUpDown, BarChart3, Home, Package, Settings, Shield, ShoppingCart, TrendingUp, Truck, Users } from "lucide-react" // Removed Calendar, Inbox, Search
 
 import {
   Sidebar,
@@ -15,14 +15,17 @@ import {
 // Menu items.
 
 const items = [
-  { name: "Dashboard", url: "/", icon: Home },
-  { name: "Quick Sales", url: "/sales", icon: ShoppingCart },
-  { name: "Inventory", url: "/inventory", icon: Package },
-  { name: "Products", url: "/products", icon: BarChart3 },
-  { name: "Transfers", url: "/transfers", icon: ArrowUpDown },
-  { name: "Customers", url: "/customers", icon: Users },
-  { name: "Settings", url: "/settings", icon: Settings },
-];
+  { name: "Dashboard", href: "/app/", icon: Home },
+  { name: "Products", href: "/app/products", icon: Package },
+  { name: "Inventory", href: "/app/inventory", icon: BarChart3 },
+  { name: "Purchases", href: "/app/purchases", icon: ShoppingCart },
+  { name: "Sales", href: "/app/sales", icon: TrendingUp },
+  { name: "Suppliers", href: "/app/suppliers", icon: Truck },
+  { name: "Customers", href: "/app/customers", icon: Users },
+  { name: "POS", href: "/app/pos", icon: Users },
+  { name: "Teams", href: "/app/team", icon: Users },
+  { name: "Settings", href: "/app/settings", icon: Settings },
+]
 
 export function AppSidebar() {
   return (
@@ -50,7 +53,7 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <a href={item.href}>
                       <item.icon />
                       <span>{item.name}</span>
                     </a>
