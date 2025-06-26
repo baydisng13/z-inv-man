@@ -32,8 +32,10 @@ export default async function Layout({
       <AppSidebar />
       <main className="flex flex-col gap-4 w-full h-screen">
         <Header />
+        <div
+          className="px-8 flex flex-col gap-4 w-full"
+        >{children}</div>
         
-        {children}
       </main>
     </SidebarProvider>
   );

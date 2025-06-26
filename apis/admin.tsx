@@ -175,41 +175,109 @@ This ensures consistency, type safety, and maintainability across your codebase.
 
 */
 
+import { authClient } from "@/lib/auth-client";
+import queryClient from "@/lib/queryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { z } from "zod";
 
-
-// documentation 
-// ========================
-// purpuse : create user
-// request : /api/admin/users
-// method : POST
-// request body : {name: string, email: string, password: string, role?: string, data?: any}
-// response : {success: boolean, error?: string, data?: any}
-// ========================
-
-// ========================
-// purpuse : list users
-// request : /api/admin/users
-// method : GET
-// request body : {searchField?: "email" | "name", searchOperator?: "contains" | "starts_with" | "ends_with", searchValue?: string, limit?: number, offset?: number, sortBy?: "createdAt" | "updatedAt", sortDirection?: "asc" | "desc", filterField?: string, filterOperator?: "eq" | "contains" | "starts_with" | "ends_with", filterValue?: string}
-// response : {success: boolean, error?: string, data?: any}
-// ========================
-
-
-
-// zod schemas
-
-export const UserCreateSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email").min(1, "Email is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["USER", "ADMIN", "MODERATOR"]),
+// Zod schemas for admin operations
+export const CreateUserSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email(),
+  password: z.string().min(6).max(100),
+  role: z.enum(["user", "admin"]),
   data: z.record(z.any()).optional(),
 });
 
-// Types
+export const ListUsersQuerySchema = z.object({
+  searchField: z.enum(["email", "name"]).optional(),
+  searchOperator: z.enum(["contains", "starts_with", "ends_with"]).optional(),
+  searchValue: z.string().optional(),
+  limit: z.union([z.string(), z.number()]).optional(),
+  offset: z.union([z.string(), z.number()]).optional(),
+  sortBy: z.string().optional(),
+  sortDirection: z.enum(["asc", "desc"]).optional(),
+  filterField: z.string().optional(),
+  filterOperator: z
+    .enum(["lt", "eq", "ne", "lte", "gt", "gte", "contains"])
+    .optional(),
+  filterValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
+});
 
-export type UserCreateType = z.infer<typeof UserCreateSchema>;
-export type UserListResponse = {
-  // data
+// Export types from Zod schemas
+
+export type CreateUserType = z.infer<typeof CreateUserSchema>;
+export type ListUsersQueryType = z.infer<typeof ListUsersQuerySchema>;
+
+// API functions
+export async function createUserFn(data: CreateUserType) {
+  return await authClient.admin.createUser(data, {
+    throw: true,
+  });
 }
+
+export async function listUsersFn(query: ListUsersQueryType = {}) {
+  return await authClient.admin.listUsers({
+    query,
+    fetchOptions:{
+      throw: true, 
+    }
+  });
+}
+
+export async function removeUserFn(userId: string) {
+  return await authClient.admin.removeUser({
+    userId,
+  });
+}
+
+const Admin = {
+  CreateUser: {
+    useMutation: (options = {}) =>
+      useMutation({
+        mutationFn: createUserFn,
+        onSuccess: () => {
+          toast("User created successfully");
+          queryClient.invalidateQueries({ queryKey: ["Users"] });
+        },
+        onError: () => toast("Failed to create user"),
+        onMutate: () => toast("Creating user..."),
+        ...options,
+      }),
+  },
+  ListUsers: {
+     useQuery: (
+      query: ListUsersQueryType = {
+        searchField: "email",
+        searchOperator: "contains",
+        searchValue: "",
+        limit: 10,
+        offset: 0,
+        sortBy: "createdAt",
+        sortDirection: "desc",
+      },
+      options = {}
+    ) =>
+      useQuery({
+        queryKey: ["Users", query],
+        queryFn: () => listUsersFn(query),
+        ...options,
+      }),
+  },
+  RemoveUser: {
+    useMutation: (options = {}) =>
+      useMutation({
+        mutationFn: removeUserFn,
+        onSuccess: () => {
+          toast("User removed successfully");
+          queryClient.invalidateQueries({ queryKey: ["Users"] });
+        },
+        onMutate: () => toast("Removing user..."),
+        onError: () => toast("Failed to remove user"),
+        ...options,
+      }),
+  },
+};
+
+export default Admin;

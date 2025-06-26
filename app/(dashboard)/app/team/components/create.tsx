@@ -30,6 +30,9 @@ import {
 import { UserPlus, ShieldCheck, Shield, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import api from "@/apis";
+import { useEffect } from "react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const CreateSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -80,33 +83,31 @@ export function CreateMemberModal({
     toast.info("Password generated and saved to clipboard");
   };
 
+  const {
+    mutate: createUser,
+    isPending,
+    error,
+    isError,
+    isSuccess,
+  } = api.Admin.CreateUser.useMutation();
+
+  useEffect(() => {
+    if (isSuccess ) {
+      onOpenChange(false);
+      form.reset();
+    }
+  }, [isSuccess]);
+
+
   const handleSubmit = async (data: CreateData) => {
-    await authClient.admin.createUser({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      role: data.role,
-    }, {
-      onError: (error) => {
-        toast(error.error.message || error.error.statusText);
-      },
-      onSuccess: () => {
-        toast("User created successfully");
-        onOpenChange(false);
-        afterCreate();
-      },
-      onRequest: () => {
-        toast.loading("Creating user...");
-      },
-    });
+    createUser(data);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 ">
-            <UserPlus className="h-5 w-5" />
+          <DialogTitle >
             Create Team Member
           </DialogTitle>
           <DialogDescription>
@@ -160,8 +161,7 @@ export function CreateMemberModal({
                   <FormLabel>Password</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
-                      <Input
-                        type="text"
+                      <PasswordInput
                         placeholder="Generate or enter password"
                         {...field}
                       />
@@ -226,10 +226,11 @@ export function CreateMemberModal({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" disabled={isPending}>
                 {form.formState.isSubmitting ? "Sending..." : "Send Invitation"}
               </Button>
             </div>
