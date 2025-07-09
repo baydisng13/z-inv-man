@@ -81,7 +81,7 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        <Link href="/products/new">
+        <Link href="/app/products/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Add Product
@@ -150,7 +150,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Link href={`/products/${product.id}`}>
+                  <Link href={`/app/products/${product.id}`}>
                     <Button variant="ghost" size="sm">
                       Edit
                     </Button>

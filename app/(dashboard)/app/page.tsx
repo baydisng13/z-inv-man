@@ -33,7 +33,7 @@ export default function Dashboard() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's your inventory overview.</p>
+        <p className="text-muted-foreground">Welcome back! Here&apos;s your inventory overview.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +70,7 @@ export default function Dashboard() {
               <div className="flex items-center space-x-4">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Product "iPhone 15" updated</p>
+                  <p className="text-sm font-medium">Product &quot;iPhone 15&quot; updated</p>
                   <p className="text-xs text-muted-foreground">1 hour ago</p>
                 </div>
               </div>

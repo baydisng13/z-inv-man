@@ -102,7 +102,7 @@ export default function TeamManagement() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Team Management</h1>
-          <p className="text-muted-foreground">Manage your organization's team members and permissions</p>
+          <p className="text-muted-foreground">Manage your organization&apos;s team members and permissions</p>
         </div>
         <Button onClick={() => setShowInviteModal(true)} className="w-fit">
           <Plus className="h-4 w-4 mr-2" />

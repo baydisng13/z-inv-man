@@ -96,7 +96,7 @@ export function CreateMemberModal({
       onOpenChange(false);
       form.reset();
     }
-  }, [isSuccess]);
+  }, [isSuccess, onOpenChange]);
 
 
   const handleSubmit = async (data: CreateData) => {
@@ -207,7 +207,7 @@ export function CreateMemberModal({
                           icon: <Shield className="h-4 w-4" />,
                         },
                       ].map((role) => (
-                        <SelectItem value={role.value} className="font-medium">
+                        <SelectItem key={role.value} value={role.value} className="font-medium">
                           <div className="flex items-center gap-2">
                             {role.icon}
                             {role.label}

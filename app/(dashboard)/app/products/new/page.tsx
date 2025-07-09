@@ -45,20 +45,7 @@ export default function NewProductPage() {
   })
 
   async function onSubmit(data: ProductFormValues) {
-    setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    console.log("Creating product:", data)
-
-    toast({
-      title: "Product created",
-      description: "The product has been successfully created.",
-    })
-
-    setIsLoading(false)
-    router.push("/products")
   }
 
   return (
@@ -179,7 +166,7 @@ export default function NewProductPage() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Archive Product</FormLabel>
-                      <FormDescription>Archived products won't appear in active listings</FormDescription>
+                      <FormDescription>Archived products won&apos;t appear in active listings</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
