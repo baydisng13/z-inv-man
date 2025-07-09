@@ -9,87 +9,61 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Filter } from "lucide-react"
 
-// Mock data
-const purchases = [
-  {
-    id: 1,
-    supplier: "Tech Distributors Inc",
-    totalAmount: 15000.0,
-    paidAmount: 15000.0,
-    paymentStatus: "PAID",
-    status: "RECEIVED",
-    receivedDate: "2024-01-15",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: 2,
-    supplier: "Global Electronics",
-    totalAmount: 8500.0,
-    paidAmount: 4250.0,
-    paymentStatus: "PARTIAL",
-    status: "RECEIVED",
-    receivedDate: "2024-01-14",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: 3,
-    supplier: "Mobile World Supply",
-    totalAmount: 12000.0,
-    paidAmount: 0.0,
-    paymentStatus: "CREDIT",
-    status: "DRAFT",
-    receivedDate: null,
-    createdAt: "2024-01-12",
-  },
-  {
-    id: 4,
-    supplier: "Computer Parts Co",
-    totalAmount: 5500.0,
-    paidAmount: 5500.0,
-    paymentStatus: "PAID",
-    status: "CANCELLED",
-    receivedDate: null,
-    createdAt: "2024-01-05",
-  },
-]
+import api from "@/apis";
+import NewPurchaseModal from "@/components/purchases/new-purchase-modal"
 
 export default function PurchasesPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredPurchases = purchases.filter((purchase) => {
-    const matchesSearch = purchase.supplier.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesPaymentStatus = paymentStatusFilter === "all" || purchase.paymentStatus === paymentStatusFilter
-    const matchesStatus = statusFilter === "all" || purchase.status === statusFilter
-    return matchesSearch && matchesPaymentStatus && matchesStatus
-  })
+
+  const {
+    data: purchasesData,
+    isLoading,
+    isError,
+    error,
+  } = api.Purchase.GetAll.useQuery();
+
+  const filteredPurchases = purchasesData
+    ? purchasesData.filter((purchase) => {
+        // Assuming supplier name will be joined or fetched separately later
+        const supplierName = purchase.supplierId || ""; // Use supplierId as placeholder
+        const matchesSearch = supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesPaymentStatus = paymentStatusFilter === "all" || purchase.paymentStatus === paymentStatusFilter;
+        const matchesStatus = statusFilter === "all" || purchase.status === statusFilter;
+        return matchesSearch && matchesPaymentStatus && matchesStatus;
+      })
+    : [];
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
       case "PAID":
-        return <Badge variant="default">Paid</Badge>
+        return <Badge variant="default">Paid</Badge>;
       case "PARTIAL":
-        return <Badge variant="secondary">Partial</Badge>
+        return <Badge variant="secondary">Partial</Badge>;
       case "CREDIT":
-        return <Badge variant="outline">Credit</Badge>
+        return <Badge variant="outline">Credit</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "RECEIVED":
-        return <Badge variant="default">Received</Badge>
+        return <Badge variant="default">Received</Badge>;
       case "DRAFT":
-        return <Badge variant="secondary">Draft</Badge>
+        return <Badge variant="secondary">Draft</Badge>;
       case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>
+        return <Badge variant="destructive">Cancelled</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
+
+  if (isLoading) return <div>Loading purchase orders...</div>;
+  if (isError) return <div>Error loading purchase orders: {error?.message}</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -98,12 +72,7 @@ export default function PurchasesPage() {
           <h1 className="text-3xl font-bold">Purchase Orders</h1>
           <p className="text-muted-foreground">Manage your purchase orders and supplier relationships</p>
         </div>
-        <Link href="/purchases/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Purchase Order
-          </Button>
-        </Link>
+        <NewPurchaseModal />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -158,21 +127,19 @@ export default function PurchasesPage() {
           <TableBody>
             {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
-                <TableCell className="font-medium">{purchase.supplier}</TableCell>
-                <TableCell>${purchase.totalAmount.toFixed(2)}</TableCell>
-                <TableCell>${purchase.paidAmount.toFixed(2)}</TableCell>
+                <TableCell className="font-medium">{purchase.supplierName || purchase.supplierId || "N/A"}</TableCell>
+                <TableCell>${parseFloat(purchase.totalAmount).toFixed(2)}</TableCell>
+                <TableCell>${parseFloat(purchase.paidAmount).toFixed(2)}</TableCell>
                 <TableCell>{getPaymentStatusBadge(purchase.paymentStatus)}</TableCell>
                 <TableCell>{getStatusBadge(purchase.status)}</TableCell>
                 <TableCell>
-                  {purchase.receivedDate ? new Date(purchase.receivedDate).toLocaleDateString() : "-"}
+                  {purchase.receivedAt ? new Date(purchase.receivedAt).toLocaleDateString() : "-"}
                 </TableCell>
                 <TableCell>{new Date(purchase.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Link href={`/purchases/${purchase.id}`}>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </Link>
+                  <Button variant="ghost" size="sm">
+                    View
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -182,7 +149,7 @@ export default function PurchasesPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredPurchases.length} of {purchases.length} purchase orders
+          Showing {filteredPurchases.length} of {purchasesData?.length ?? 0} purchase orders
         </p>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" disabled>
@@ -193,6 +160,8 @@ export default function PurchasesPage() {
           </Button>
         </div>
       </div>
+
+    
     </div>
-  )
+  );
 }

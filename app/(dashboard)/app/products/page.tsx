@@ -1,78 +1,88 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Filter } from "lucide-react"
-
-// Mock data
-const products = [
-  {
-    id: 1,
-    barcode: "1234567890123",
-    name: "iPhone 15 Pro",
-    unit: "pcs",
-    sellingPrice: 999.99,
-    archived: false,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    barcode: "2345678901234",
-    name: "Samsung Galaxy S24",
-    unit: "pcs",
-    sellingPrice: 899.99,
-    archived: false,
-    createdAt: "2024-01-14",
-  },
-  {
-    id: 3,
-    barcode: "3456789012345",
-    name: 'MacBook Pro 14"',
-    unit: "pcs",
-    sellingPrice: 1999.99,
-    archived: false,
-    createdAt: "2024-01-13",
-  },
-  {
-    id: 4,
-    barcode: "4567890123456",
-    name: "Dell XPS 13",
-    unit: "pcs",
-    sellingPrice: 1299.99,
-    archived: true,
-    createdAt: "2024-01-12",
-  },
-]
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Search, Filter } from "lucide-react";
+import api from "@/apis";
+import useConfirmationStore from "@/store/confirmation";
 
 export default function ProductsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [unitFilter, setUnitFilter] = useState("all")
-  const [sortBy, setSortBy] = useState("name")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [unitFilter, setUnitFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
 
-  const filteredProducts = products
-    .filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.barcode.includes(searchTerm)
-      const matchesUnit = unitFilter === "all" || product.unit === unitFilter
-      return matchesSearch && matchesUnit
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name)
-        case "price":
-          return b.sellingPrice - a.sellingPrice
-        case "date":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        default:
-          return 0
-      }
-    })
+  const { OpenConfirmation } = useConfirmationStore();
+
+  const {
+    data: products,
+    isLoading,
+    isSuccess,
+    isError,
+    error,
+  } = api.Product.GetAll.useQuery();
+  const {
+    mutate: deleteProduct,
+    isPending: isDeleting,
+    isSuccess: isDeleted,
+    isError: isDeletionError,
+    error: deletionError,
+  } = api.Product.Delete.useMutation();
+  const {
+    mutate: unarchiveProduct,
+    isPending: isUnarchiving,
+    isSuccess: isUnarchived,
+    isError: isUnarchivalError,
+    error: unarchivalError,
+  } = api.Product.Unarchive.useMutation();
+
+  const filteredProducts = isSuccess
+    ? products
+        .filter((product) => {
+          const matchesSearch =
+            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.barcode.includes(searchTerm);
+          const matchesUnit =
+            unitFilter === "all" || product.unit === unitFilter;
+          return matchesSearch && matchesUnit;
+        })
+        .sort((a, b) => {
+          switch (sortBy) {
+            case "name":
+              return a.name.localeCompare(b.name);
+            case "price":
+              return parseInt(b.sellingPrice) - parseInt(a.sellingPrice);
+            case "date":
+              return (
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+              );
+            default:
+              return 0;
+          }
+        })
+    : [];
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (isError) return <div>Error: {error?.message}</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -139,22 +149,74 @@ export default function ProductsPage() {
           <TableBody>
             {filteredProducts.map((product) => (
               <TableRow key={product.id}>
-                <TableCell className="font-mono text-sm">{product.barcode}</TableCell>
+                <TableCell className="font-mono text-sm">
+                  {product.barcode}
+                </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.unit}</TableCell>
-                <TableCell>${product.sellingPrice.toFixed(2)}</TableCell>
+                <TableCell>${product.sellingPrice}</TableCell>
                 <TableCell>
-                  <Badge variant={product.archived ? "secondary" : "default"}>
-                    {product.archived ? "Archived" : "Active"}
+                  <Badge variant={product.isArchived ? "secondary" : "default"}>
+                    {product.isArchived ? "Archived" : "Active"}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {new Date(product.createdAt).toLocaleDateString()}
+                </TableCell>
                 <TableCell className="text-right">
                   <Link href={`/app/products/${product.id}`}>
                     <Button variant="ghost" size="sm">
                       Edit
                     </Button>
                   </Link>
+
+                  {!product.isArchived ? (
+                    <Button
+                      className="ml-2 text-red-500 hover:text-red-600"
+                      size="sm"
+                      variant="ghost"
+                      disabled={isDeleting || isUnarchiving}
+                      onClick={() => {
+                        OpenConfirmation({
+                          title: "Delete Product",
+                          description: `Are you sure you want to delete the product "${product.name}"?`,
+                          actionLabel: "Delete",
+                          onAction: () => {
+                            deleteProduct(product.id);
+                          },
+                          cancelLabel: "Cancel",
+                          onCancel: () => {
+                            // Do nothing
+                          },
+                        });
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  ) : (
+                    <Button
+                      className="ml-2 text-red-500 hover:text-red-600"
+                      size="sm"
+                      variant="ghost"
+                      disabled={isUnarchiving || isDeleting}
+                      onClick={() => {
+                        OpenConfirmation({
+                          title: "Unarchive Product",
+                          description: `Are you sure you want to unarchive the product "${product.name}"?`,
+                          actionLabel: "Unarchive",
+                          onAction: () => {
+                            unarchiveProduct(product.id);
+                          },
+                          cancelLabel: "Cancel",
+                          onCancel: () => {
+                            // Do nothing
+                          },
+                        });
+                      }}
+                    >
+                      Unarchive
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -164,7 +226,7 @@ export default function ProductsPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
+          Showing {filteredProducts.length} of {products?.length ?? 0} products
         </p>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" disabled>
@@ -176,5 +238,5 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

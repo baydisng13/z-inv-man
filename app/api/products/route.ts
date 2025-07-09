@@ -15,8 +15,15 @@ const productSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  // TODO: Implement filtering, sorting, and pagination
-  const allProducts = await db.select().from(products);
+  const { searchParams } = new URL(req.url);
+  const isArchivedParam = searchParams.get("isArchived");
+
+  // By default, show non-archived products
+  const showArchived = isArchivedParam === "true";
+
+  const allProducts = await db
+    .select()
+    .from(products)
   return NextResponse.json(allProducts);
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { purchases, purchaseItems } from "@/db/schema/product-schema";
+import { purchases, purchaseItems, products, suppliers } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -12,7 +12,7 @@ const purchaseUpdateSchema = z.object({
   paidAmount: z.number().positive().optional(),
   paymentStatus: z.enum(["PAID", "PARTIAL", "CREDIT"]).optional(),
   status: z.enum(["DRAFT", "RECEIVED", "CANCELLED"]).optional(),
-  receivedAt: z.string().datetime().optional(),
+  receivedAt: z.string().datetime().optional().nullable(),
 });
 
 export async function GET(
@@ -20,26 +20,50 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
-  })
-  
+    headers: await headers(), // you need to pass the headers object.
+  });
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const purchase = await db
-    .select()
+    .select({
+      id: purchases.id,
+      supplierId: purchases.supplierId,
+      totalAmount: purchases.totalAmount,
+      paidAmount: purchases.paidAmount,
+      paymentStatus: purchases.paymentStatus,
+      status: purchases.status,
+      receivedAt: purchases.receivedAt,
+      createdBy: purchases.createdBy,
+      createdAt: purchases.createdAt,
+      updatedAt: purchases.updatedAt,
+      supplierName: suppliers.name, // Include supplier name
+    })
     .from(purchases)
-    .where(eq(purchases.id, params.id));
+    .where(eq(purchases.id, params.id))
+    .leftJoin(suppliers, eq(purchases.supplierId, suppliers.id));
 
   if (purchase.length === 0) {
     return NextResponse.json({ message: "Purchase not found" }, { status: 404 });
   }
 
   const items = await db
-    .select()
+    .select({
+      id: purchaseItems.id,
+      purchaseId: purchaseItems.purchaseId,
+      productId: purchaseItems.productId,
+      quantity: purchaseItems.quantity,
+      costPrice: purchaseItems.costPrice,
+      productName: products.name, // Include product name
+      productBarcode: products.barcode, // Include product barcode
+      productUnit: products.unit, // Include product unit
+      productSellingPrice: products.sellingPrice, // Include product selling price
+    })
     .from(purchaseItems)
-    .where(eq(purchaseItems.purchaseId, params.id));
+    .where(eq(purchaseItems.purchaseId, params.id))
+    .leftJoin(products, eq(purchaseItems.productId, products.id));
 
   return NextResponse.json({ ...purchase[0], items });
 }

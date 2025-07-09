@@ -121,4 +121,58 @@ test.describe("Product API", () => {
     const exists = allProducts.some((p: any) => p.id === product.id);
     expect(exists).toBeFalsy();
   });
+
+  test("should archive and unarchive a product", async ({ request }) => {
+    const newProduct = {
+      name: "Test Product for Archive",
+      barcode: "1234567894",
+      unit: "pcs",
+      sellingPrice: 14.99,
+    };
+
+    // 1. Create a product
+    const createRes = await request.post("/api/products", {
+      data: newProduct,
+      headers: { Cookie: adminCookies },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const product = await createRes.json();
+
+    // 2. Archive the product (using the DELETE endpoint)
+    const archiveRes = await request.delete(`/api/products/${product.id}`, {
+      headers: { Cookie: adminCookies },
+    });
+    expect(archiveRes.ok()).toBeTruthy();
+    const archivedProduct = await archiveRes.json();
+    expect(archivedProduct.isArchived).toBe(true);
+
+    // 3. Verify it's in the archived list and not in the active list
+    const archivedListRes = await request.get("/api/products?isArchived=true", {
+      headers: { Cookie: adminCookies },
+    });
+    const archivedList = await archivedListRes.json();
+    expect(archivedList.some((p: any) => p.id === product.id)).toBe(true);
+
+    const activeListRes = await request.get("/api/products?isArchived=false", {
+        headers: { Cookie: adminCookies },
+    });
+    const activeList = await activeListRes.json();
+    expect(activeList.some((p: any) => p.id === product.id)).toBe(false);
+
+    // 4. Unarchive the product
+    const unarchiveRes = await request.put(`/api/products/${product.id}`, {
+        data: { isArchived: false },
+        headers: { Cookie: adminCookies },
+    });
+    expect(unarchiveRes.ok()).toBeTruthy();
+    const unarchivedProduct = await unarchiveRes.json();
+    expect(unarchivedProduct.isArchived).toBe(false);
+
+    // 5. Verify it's back in the active list
+    const finalListRes = await request.get("/api/products?isArchived=false", {
+        headers: { Cookie: adminCookies },
+    });
+    const finalList = await finalListRes.json();
+    expect(finalList.some((p: any) => p.id === product.id)).toBe(true);
+  });
 });

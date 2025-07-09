@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { purchases, purchaseItems } from "@/db/schema/product-schema";
+import { purchases, purchaseItems, suppliers } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const allPurchases = await db.select().from(purchases);
+  const allPurchases = await db.select().from(purchases).leftJoin(suppliers, eq(purchases.supplierId, suppliers.id));
+  console.log("All Purchases with Suppliers:", allPurchases);
   return NextResponse.json(allPurchases);
 }
 

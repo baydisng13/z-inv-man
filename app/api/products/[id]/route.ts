@@ -122,27 +122,15 @@ export async function DELETE(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if the product exists before attempting to delete
-  const existingProduct = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, params.id));
+  const archivedProduct = await db
+    .update(products)
+    .set({ isArchived: true, updatedAt: new Date() })
+    .where(eq(products.id, params.id))
+    .returning();
 
-  if (existingProduct.length === 0) {
+  if (archivedProduct.length === 0) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
-  await db.delete(products).where(eq(products.id, params.id));
-
-  const deletedProduct = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, params.id));
-
-
-  if (deletedProduct.length > 0) {
-    return NextResponse.json({ message: "Unable to delete product" }, { status: 500 });
-  }
-
-  return NextResponse.json({ message: "Product deleted successfully" });
+  return NextResponse.json(archivedProduct[0]);
 }

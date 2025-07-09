@@ -1,14 +1,11 @@
 "use client";
 
-import queryClient from '@/lib/queryClient';
-import {
-  // useQuery, // Unused
-  // useMutation, // Unused
-  // useQueryClient, // Unused
-  QueryClientProvider,
-} from '@tanstack/react-query'
-import { Toaster } from './ui/sonner';
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import queryClient from "@/lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "./ui/sonner";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { GlobalModal } from "./GlobalModal";
+import ConfirmationDialog from "./confirmation-dialog";
 
 function Provider({
   children,
@@ -16,12 +13,12 @@ function Provider({
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <QueryClientProvider client={queryClient}>
-
       <NextThemesProvider {...props}>{children}</NextThemesProvider>
+      <GlobalModal />
+      <ConfirmationDialog />
       <Toaster />
     </QueryClientProvider>
-  )
+  );
 }
-
 
 export default Provider;

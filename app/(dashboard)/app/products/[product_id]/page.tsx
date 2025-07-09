@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,59 +26,68 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import {
-  ProductCreateSchema,
-  ProductCreateType,
+  ProductUpdateSchema,
+  ProductUpdateType,
 } from "@/schemas/product-schema";
 import ImprovedBarcodeField from "@/components/improved-barcode-field";
 import api from "@/apis";
 
-export default function NewProductPage() {
+export default function UpdateProductPage() {
   const router = useRouter();
-  const [createAnother, setCreateAnother] = useState(false);
 
-  const form = useForm<ProductCreateType>({
-    resolver: zodResolver(ProductCreateSchema),
+  const { product_id } = useParams<{
+    product_id: string;
+  }>();
+
+  const { data: product, isLoading, isSuccess, isError, error } = api.Product.GetById.useQuery(product_id);
+
+  const form = useForm<ProductUpdateType>({
+    resolver: zodResolver(ProductUpdateSchema),
     defaultValues: {
       barcode: "",
-      name: "",
-      description: "",
-      sellingPrice: 0,
     },
   });
 
-  const {
-    mutate: createProduct,
-    isPending: isCreating,
-    isSuccess,
-  } = api.Product.Create.useMutation();
-
   useEffect(() => {
     if (isSuccess) {
-      if (createAnother) {
-        form.reset({
-          barcode: "",
-          name: "",
-          description: "",
-          unit: undefined,
-          sellingPrice: 0,
-        });
-      } else {
-        router.push("/app/products");
-      }
+      form.setValue("barcode", product?.barcode);
+      form.setValue("name", product?.name);
+      form.setValue("description", product?.description);
+      form.setValue("unit", product?.unit);
+      product?.sellingPrice &&form.setValue("sellingPrice", parseInt(product?.sellingPrice));
     }
-  }, [isSuccess]);
+  }, [isSuccess, router]);
 
-  async function onSubmit(data: ProductCreateType) {
-    createProduct(data);
+
+  const {
+    mutate: UpdateProduct,
+    isPending: isCreating,
+    isSuccess: isUpdated,
+    isError: isCreationError,
+    error: creationError,
+  } = api.Product.Update.useMutation();
+
+  useEffect(() => {
+    if (isUpdated) {
+      router.push("/app/products");
+    }
+  }, [isUpdated, router]);
+
+  async function onSubmit(data: ProductUpdateType) {
+    UpdateProduct({
+      id: product_id,
+      data,
+    });
   }
 
   return (
-    <div className="px-6 flex flex-col gap-4">
-      <div className="flex flex-col gap-4">
-        <Link href="/app/products">
+    <div className="px-6  flex flex-col gap-4">
+      <div className="flex flex-col  gap-4">
+        <Link href="/products">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
@@ -86,7 +96,7 @@ export default function NewProductPage() {
         <div>
           <h1 className="text-3xl font-bold">Add New Product</h1>
           <p className="text-muted-foreground">
-            Create a new product in your catalog
+            Update a new product in your catalog
           </p>
         </div>
       </div>
@@ -96,7 +106,7 @@ export default function NewProductPage() {
           <CardTitle>Product Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
+          <Form {...form}>x``
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
@@ -145,7 +155,7 @@ export default function NewProductPage() {
                       <FormLabel>Unit</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -190,24 +200,13 @@ export default function NewProductPage() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="create-another"
-                  checked={createAnother}
-                  onCheckedChange={setCreateAnother}
-                />
-                <Label htmlFor="create-another">
-                  Create and add another
-                </Label>
-              </div>
-
               <div className="flex gap-4 mt-6">
                 <Button
                   type="submit"
                   disabled={isCreating}
                   className="px-8 py-2 text-base"
                 >
-                  {isCreating ? "Creating..." : "Create Product"}
+                  {isCreating ? "Creating..." : "Update Product"}
                 </Button>
                 <Link href="/app/products">
                   <Button type="button" variant="outline">
