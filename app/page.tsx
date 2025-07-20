@@ -1,104 +1,151 @@
-// import { ModeToggle } from "@/components/mode-toggle"; // Commented out as component usage is commented
+import { Button } from "@/components/ui/button";
+import { ArrowRight, CheckCircle, Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        {/* <ModeToggle /> */}
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="bg-background text-foreground font-sans">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center gap-2">
+                <Image src="/file.svg" alt="Logo" width={28} height={28} className="dark:invert"/>
+                <span className="font-bold text-lg">Smart Inventory</span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Sign In
+              </Link>
+              <Button asChild>
+                <Link href="/sign-up">Get Started</Link>
+              </Button>
+            </div>
+          </div>
         </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="pt-20">
+        <section className="relative py-20 md:py-32">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4">
+              Smart Inventory Management for Your Shop
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+              Take control of your products, sales, and suppliers with an all-in-one solution built for modern shops. Simple, Fast, and Powerful.
+            </p>
+            <div className="flex justify-center items-center gap-4">
+              <Button size="lg" asChild>
+                <Link href="/sign-up">
+                  Get Started Today – Streamline Your Shop
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 md:py-28 bg-muted/50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold">Why Choose Our Inventory Management System?</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">Real-Time Inventory Tracking</h3>
+                <p className="text-muted-foreground">Say goodbye to stockouts and overstocking. Know exactly what you have and what you need.</p>
+              </div>
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">Seamless Product Management</h3>
+                <p className="text-muted-foreground">Add, edit, and organize products with just a few clicks.</p>
+              </div>
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">Smart Purchase & Sales Management</h3>
+                <p className="text-muted-foreground">Track purchases, monitor sales, and view detailed reports – all in one place.</p>
+              </div>
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">Supplier & Customer Management</h3>
+                <p className="text-muted-foreground">Build better relationships by keeping all your supplier and customer info in one system.</p>
+              </div>
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">POS Integration</h3>
+                <p className="text-muted-foreground">Sell smarter with a built-in Point of Sale (POS) that updates inventory automatically.</p>
+              </div>
+              <div className="bg-card p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">Easy-to-Use Dashboard</h3>
+                <p className="text-muted-foreground">No learning curve – just powerful tools with a simple, intuitive interface.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Benefits Section */}
+        <section className="py-20 md:py-28">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6">Focus on growth, not paperwork.</h2>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
+                    <span><span className="font-semibold">Save time</span> with automated stock tracking.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
+                    <span>Make <span className="font-semibold">data-driven decisions</span> with insightful reports.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
+                    <span>Improve <span className="font-semibold">customer satisfaction</span> by never running out of products.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
+                    <span><span className="font-semibold">Grow your business</span> with tools designed for efficiency.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <Image src="/store.jpg" alt="Modern retail store" width={1200} height={800} className="rounded-lg shadow-xl" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 md:py-28 bg-primary text-primary-foreground">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your shop deserves better tools.</h2>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8">
+              Try our inventory management system today and focus on growing your business – not chasing stock.
+            </p>
+            <div className="flex justify-center items-center gap-4">
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/sign-up">Start Free Trial</Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/50 hover:bg-primary-foreground/10" asChild>
+                <Link href="#">Request a Demo</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="bg-muted/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-muted-foreground text-sm">&copy; {new Date().getFullYear()} Smart Inventory. All rights reserved.</p>
+            <p className="text-sm font-semibold mt-4 md:mt-0">
+              Inventory made simple – so you can sell more and stress less.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
