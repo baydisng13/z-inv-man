@@ -4,6 +4,7 @@ import { z } from "zod";
 export const SupplierSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, "Name is required"),
+  tin_number: z.string().min(1, "TIN Number is required"),
   phone: z.string().optional(),
   email: z.string().email("Invalid email address").optional(),
   address: z.string().optional(),
@@ -16,6 +17,7 @@ export const SupplierSchema = z.object({
 // Schema for creating a new supplier
 export const SupplierCreateSchema = SupplierSchema.pick({
   name: true,
+  tin_number: true,
   phone: true,
   email: true,
   address: true,

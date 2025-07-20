@@ -1,0 +1,1 @@
+ALTER TABLE "customers" ADD COLUMN "tin" varchar(20);

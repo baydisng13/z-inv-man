@@ -11,6 +11,13 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
+
+
+
+
+
+
+
 ///////////////////////
 // PRODUCTS
 ///////////////////////
@@ -33,6 +40,13 @@ export const products = pgTable("products", {
   isArchived: boolean("is_archived").default(false).notNull(),
 });
 
+
+
+
+
+
+
+
 ///////////////////////
 // INVENTORY STOCK (cache)
 ///////////////////////
@@ -46,6 +60,16 @@ export const inventoryStock = pgTable("inventory_stock", {
     withTimezone: true,
   }).defaultNow(),
 });
+
+
+
+
+
+
+
+
+
+
 
 ///////////////////////
 // STOCK MOVEMENTS
@@ -67,6 +91,13 @@ export const stockMovements = pgTable("stock_movements", {
     .notNull(),
 });
 
+
+
+
+
+
+
+
 ///////////////////////
 // PURCHASES
 ///////////////////////
@@ -86,6 +117,9 @@ export const purchases = pgTable("purchases", {
     .notNull(),
 });
 
+
+
+
 export const purchaseItems = pgTable("purchase_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   purchaseId: uuid("purchase_id")
@@ -97,6 +131,16 @@ export const purchaseItems = pgTable("purchase_items", {
   quantity: integer("quantity").notNull(),
   costPrice: decimal("cost_price", { precision: 12, scale: 2 }).notNull(),
 });
+
+
+
+
+
+
+
+
+
+
 
 ///////////////////////
 // SALES
@@ -121,6 +165,9 @@ export const sales = pgTable("sales", {
     .notNull(),
 });
 
+
+
+
 export const saleItems = pgTable("sale_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   saleId: uuid("sale_id")
@@ -134,12 +181,21 @@ export const saleItems = pgTable("sale_items", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
 });
 
+
+
+
+
+
+
+
+
 ///////////////////////
 // SUPPLIERS
 ///////////////////////
 export const suppliers = pgTable("suppliers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
+  tin_number: varchar("tin_number", { length: 20 }).notNull(),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 100 }),
   address: text("address"),
@@ -155,12 +211,22 @@ export const suppliers = pgTable("suppliers", {
     .notNull(),
 });
 
+
+
+
+
+
+
+
+
+
 ///////////////////////
 // CUSTOMERS
 ///////////////////////
 export const customers = pgTable("customers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
+  tin: varchar("tin", { length: 20 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 100 }),
   address: text("address"),

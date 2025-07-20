@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +18,7 @@ import {
   SupplierCreateSchema,
   SupplierCreateType,
 } from "@/schemas/supplier-schema";
+import { Separator } from "../ui/separator";
 
 interface NewSupplierModalProps {
   isOpen: boolean;
@@ -24,14 +26,11 @@ interface NewSupplierModalProps {
 }
 
 export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalProps) {
+  const [isVerifying, setIsVerifying] = useState(false);
   const form = useForm<SupplierCreateType>({
     resolver: zodResolver(SupplierCreateSchema),
     defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      address: "",
-      country: "",
+      tin_number: "",
     },
   });
 
@@ -41,6 +40,14 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
       form.reset();
     },
   });
+
+  async function onVerify() {
+    setIsVerifying(true);
+    // Mock TIN verification
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    form.setValue("name", "Mock Supplier Name");
+    setIsVerifying(false);
+  }
 
   async function onSubmit(data: SupplierCreateType) {
     createSupplier(data);
@@ -54,6 +61,26 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="tin_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>TIN Number</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder="Enter TIN number" {...field} />
+                    </FormControl>
+                    <Button type="button" onClick={onVerify} disabled={isVerifying}>
+                      {isVerifying ? "Verifying..." : "Verify TIN"}
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Separator />
             <FormField
               control={form.control}
               name="name"
@@ -129,3 +156,4 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
     </Dialog>
   );
 }
+

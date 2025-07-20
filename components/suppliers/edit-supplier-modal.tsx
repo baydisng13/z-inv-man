@@ -83,6 +83,19 @@ export default function EditSupplierModal({ isOpen, onClose, supplierId }: EditS
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
+              name="tin_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>TIN Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter TIN number" {...field} disabled />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
