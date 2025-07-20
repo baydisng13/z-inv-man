@@ -1,4 +1,4 @@
-import { getTestAdminCookies } from "@/lib/test-helper";
+import { getTestAdminCookies, clearDbTables } from "@/lib/test-helper";
 import { test, expect } from "@playwright/test";
 
 test.describe("Product API", () => {
@@ -8,8 +8,10 @@ test.describe("Product API", () => {
     adminCookies = await getTestAdminCookies(request);
   });
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
     await page.context().clearCookies();
+    await clearDbTables();
+    adminCookies = await getTestAdminCookies(request);
   });
 
   test("should create a product", async ({ request }) => {
@@ -104,6 +106,14 @@ test.describe("Product API", () => {
     });
     const product = await createRes.json();
 
+    // Verify product exists before deleting
+    const getResBeforeDelete = await request.get(`/api/products/${product.id}`, {
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(getResBeforeDelete.ok()).toBeTruthy(); // Ensure product is found before deletion
+
     const deleteRes = await request.delete(`/api/products/${product.id}`, {
       headers: {
         Cookie: adminCookies,
@@ -138,8 +148,9 @@ test.describe("Product API", () => {
     expect(createRes.ok()).toBeTruthy();
     const product = await createRes.json();
 
-    // 2. Archive the product (using the DELETE endpoint)
-    const archiveRes = await request.delete(`/api/products/${product.id}`, {
+    // 2. Archive the product (using the PATCH endpoint)
+    const archiveRes = await request.patch(`/api/products/${product.id}`, {
+      data: { isArchived: true },
       headers: { Cookie: adminCookies },
     });
     expect(archiveRes.ok()).toBeTruthy();
@@ -174,5 +185,33 @@ test.describe("Product API", () => {
     });
     const finalList = await finalListRes.json();
     expect(finalList.some((p: any) => p.id === product.id)).toBe(true);
+  });
+
+  test("should create an inventory item when a product is created", async ({ request }) => {
+    const newProduct = {
+      name: "Test Product with Inventory",
+      barcode: "1234567895",
+      unit: "pcs",
+      sellingPrice: 15.99,
+    };
+
+    const createRes = await request.post("/api/products", {
+      data: newProduct,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const product = await createRes.json();
+
+    const inventoryRes = await request.get(`/api/inventory?productId=${product.id}`, {
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(inventoryRes.ok()).toBeTruthy();
+    const inventory = await inventoryRes.json();
+    expect(inventory.length).toBe(1);
+    expect(inventory[0].quantity).toBe(0);
   });
 });

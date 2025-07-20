@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { products } from "@/db/schema/product-schema";
+import { products, inventoryStock } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { eq, and, or, like, asc, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -21,9 +21,13 @@ export async function GET(req: NextRequest) {
   // By default, show non-archived products
   const showArchived = isArchivedParam === "true";
 
-  const allProducts = await db
-    .select()
-    .from(products)
+  let query = await db.select().from(products);
+
+  if (!showArchived) {
+    query = query.filter((q) => q.isArchived === false);
+  }
+
+  const allProducts = await query;
   return NextResponse.json(allProducts);
 }
 
@@ -57,6 +61,12 @@ export async function POST(req: NextRequest) {
       createdBy: session.user.id,
     })
     .returning();
+
+  const newInventory = await db.insert(inventoryStock).values({
+    productId: newProduct[0].id,
+    quantity: 0,
+  }).returning();
+  console.log("New Inventory Record:", newInventory);
 
   return NextResponse.json(newProduct[0]);
 }

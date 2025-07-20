@@ -1,4 +1,18 @@
 import { expect } from "@playwright/test";
+import { db } from "@/db";
+import { products, inventoryStock, stockMovements, purchases, purchaseItems, sales, saleItems, suppliers, customers } from "@/db/schema/product-schema";
+
+export async function clearDbTables() {
+  await db.delete(stockMovements);
+  await db.delete(inventoryStock);
+  await db.delete(purchaseItems);
+  await db.delete(saleItems);
+  await db.delete(products);
+  await db.delete(purchases);
+  await db.delete(sales);
+  await db.delete(suppliers);
+  await db.delete(customers);
+}
 
 export async function getTestAdminCookies(request: any) : Promise<string> {
   let adminCookies: string;
@@ -42,5 +56,6 @@ export async function getTestAdminCookies(request: any) : Promise<string> {
 
   expect(retrySignIn.ok()).toBeTruthy();
   adminCookies = retrySignIn.headers()["set-cookie"];
+  console.log("Admin Cookies:", adminCookies);
   return adminCookies;
 }

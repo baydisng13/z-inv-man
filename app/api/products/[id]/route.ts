@@ -122,15 +122,14 @@ export async function DELETE(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const archivedProduct = await db
-    .update(products)
-    .set({ isArchived: true, updatedAt: new Date() })
+  const deletedProduct = await db
+    .delete(products)
     .where(eq(products.id, params.id))
     .returning();
 
-  if (archivedProduct.length === 0) {
+  if (deletedProduct.length === 0) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
-  return NextResponse.json(archivedProduct[0]);
+  return NextResponse.json(deletedProduct[0]);
 }
