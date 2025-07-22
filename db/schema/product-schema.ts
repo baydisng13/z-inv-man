@@ -10,6 +10,7 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { relations } from "drizzle-orm";
 
 
 
@@ -42,6 +43,13 @@ export const products = pgTable("products", {
 
 
 
+export const productRelations = relations(products, ({ one }) => ({
+  createdByUser: one(user, {
+    fields: [products.createdBy],
+    references: [user.id],
+  }),
+}));
+
 
 
 
@@ -61,6 +69,13 @@ export const inventoryStock = pgTable("inventory_stock", {
   }).defaultNow(),
 });
 
+
+export const inventoryStockRelations = relations(inventoryStock, ({ one }) => ({
+  product: one(products, {
+    fields: [inventoryStock.productId],
+    references: [products.id],
+  }),
+}));
 
 
 
@@ -82,7 +97,7 @@ export const stockMovements = pgTable("stock_movements", {
   type: varchar("type", { length: 20 }).notNull(), // IN, OUT, TRANSFER, ADJUST
   quantity: integer("quantity").notNull(),
   referenceType: varchar("reference_type", { length: 50 }), // PURCHASE, SALE
-  referenceId: uuid("reference_id"),
+  referenceId: uuid("reference_id"), // Purchase or Sale ID
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
@@ -91,6 +106,13 @@ export const stockMovements = pgTable("stock_movements", {
     .notNull(),
 });
 
+
+export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({ 
+  createdByUser: one(user, {
+    fields: [stockMovements.createdBy],
+    references: [user.id],
+  }),
+}));
 
 
 
@@ -117,6 +139,18 @@ export const purchases = pgTable("purchases", {
     .notNull(),
 });
 
+export const purchasesRelations = relations(purchases, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [purchases.supplierId],
+    references: [suppliers.id],
+  }),
+  createdByUser: one(user, {
+    fields: [purchases.createdBy],
+    references: [user.id],
+  }),
+}));
+
+
 
 
 
@@ -133,6 +167,16 @@ export const purchaseItems = pgTable("purchase_items", {
 });
 
 
+export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
+  purchase: one(purchases, {
+    fields: [purchaseItems.purchaseId],
+    references: [purchases.id],
+  }),
+  product: one(products, {
+    fields: [purchaseItems.productId],
+    references: [products.id],
+  }),
+}));
 
 
 
@@ -165,6 +209,17 @@ export const sales = pgTable("sales", {
     .notNull(),
 });
 
+export const salesRelations = relations(sales, ({ one }) => ({
+  customer: one(customers, {
+    fields: [sales.customerId],
+    references: [customers.id],
+  }),
+  createdByUser: one(user, {
+    fields: [sales.createdBy],
+    references: [user.id],
+  }),
+}));
+
 
 
 
@@ -182,7 +237,16 @@ export const saleItems = pgTable("sale_items", {
 });
 
 
-
+export const saleItemsRelations = relations(saleItems, ({ one }) => ({
+  sale: one(sales, {
+    fields: [saleItems.saleId],
+    references: [sales.id],
+  }),
+  product: one(products, {
+    fields: [saleItems.productId],
+    references: [products.id],
+  }),
+}));
 
 
 
@@ -212,6 +276,12 @@ export const suppliers = pgTable("suppliers", {
 });
 
 
+export const suppliersRelations = relations(suppliers, ({ one }) => ({
+  createdByUser: one(user, {
+    fields: [suppliers.createdBy],
+    references: [user.id],
+  }),
+}));
 
 
 
@@ -241,3 +311,15 @@ export const customers = pgTable("customers", {
     .defaultNow()
     .notNull(),
 });
+
+
+export const customersRelations = relations(customers, ({ one }) => ({
+  createdByUser: one(user, {
+    fields: [customers.createdBy],
+    references: [user.id],
+  }),
+}));
+
+
+
+

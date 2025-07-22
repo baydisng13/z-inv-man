@@ -16,11 +16,35 @@ import {
 } from "@/schemas/purchase-schema";
 import { axiosInstance } from "@/lib/axios";
 import { buildQueryParams } from "@/lib/buildQueryParams";
+import { SupplierType } from "@/schemas/supplier-schema";
+import { User } from "better-auth";
+
+// type
+interface PurchaseItemWithProductResType {
+  id: string;
+  supplierId: string;
+  totalAmount: string;
+  paidAmount: string;
+  paymentStatus: string;
+  status: string;
+  receivedAt: any;
+  createdBy: string;
+  createdAt: string;
+  createdByUser: User
+  supplier: SupplierType
+}
 
 // API Functions
-export async function getPurchaseOrdersFn(params?: { page?: number; search?: string }) {
+export async function getPurchaseOrdersFn(params?: {
+  page?: number;
+  search?: string;
+}) {
   const queryParams = buildQueryParams(params);
-  return (await axiosInstance.get<PurchaseType[]>(`/api/purchases${queryParams}`)).data;
+  return (
+    await axiosInstance.get<PurchaseItemWithProductResType[]>(
+      `/api/purchases${queryParams}`
+    )
+  ).data;
 }
 
 export async function getPurchaseOrderByIdFn(id: string) {
@@ -43,7 +67,8 @@ export async function updatePurchaseOrderFn({
 }
 
 export async function deletePurchaseOrderFn(id: string) {
-  return (await axiosInstance.delete<PurchaseType>(`/api/purchases/${id}`)).data;
+  return (await axiosInstance.delete<PurchaseType>(`/api/purchases/${id}`))
+    .data;
 }
 
 // React Query Hooks
@@ -51,9 +76,12 @@ export const Purchase = {
   GetAll: {
     useQuery: (
       params?: { page?: number; search?: string },
-      options?: UseQueryOptions<PurchaseType[], AxiosError<ErrorRes>>
+      options?: UseQueryOptions<
+        PurchaseItemWithProductResType[],
+        AxiosError<ErrorRes>
+      >
     ) => {
-      return useQuery<PurchaseType[], AxiosError<ErrorRes>>({
+      return useQuery({
         queryKey: ["PurchaseOrders", params],
         queryFn: () => getPurchaseOrdersFn(params),
         ...options,
@@ -95,7 +123,9 @@ export const Purchase = {
           queryClient.invalidateQueries({ queryKey: ["PurchaseOrders"] });
         },
         onError: (err) => {
-          toast.error(err.response?.data.message || "Failed to create purchase order");
+          toast.error(
+            err.response?.data.message || "Failed to create purchase order"
+          );
         },
         ...options,
       });
@@ -120,10 +150,14 @@ export const Purchase = {
         onSuccess: (data) => {
           toast.success("Purchase order updated successfully");
           queryClient.invalidateQueries({ queryKey: ["PurchaseOrders"] });
-          queryClient.invalidateQueries({ queryKey: ["PurchaseOrder", data.id] });
+          queryClient.invalidateQueries({
+            queryKey: ["PurchaseOrder", data.id],
+          });
         },
         onError: (err) => {
-          toast.error(err.response?.data.message || "Failed to update purchase order");
+          toast.error(
+            err.response?.data.message || "Failed to update purchase order"
+          );
         },
         ...options,
       });
@@ -143,7 +177,9 @@ export const Purchase = {
           queryClient.removeQueries({ queryKey: ["PurchaseOrder", id] });
         },
         onError: (err) => {
-          toast.error(err.response?.data.message || "Failed to delete purchase order");
+          toast.error(
+            err.response?.data.message || "Failed to delete purchase order"
+          );
         },
         ...options,
       });

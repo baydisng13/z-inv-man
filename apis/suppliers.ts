@@ -90,7 +90,7 @@ export const Supplier = {
         mutationFn: createSupplierFn,
         onSuccess: () => {
           toast("Supplier created successfully");
-          queryClient.invalidateQueries({ queryKey: ["Suppliers"] });
+          queryClient.invalidateQueries({ queryKey: ["Suppliers"]});
         },
         onError: (err) => {
           toast.error(err.response?.data.message || "Failed to create supplier");

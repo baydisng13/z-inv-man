@@ -13,6 +13,8 @@ export const PurchaseItemSchema = z.object({
   costPrice: z.string(), // Stored as decimal in DB, comes as string
 });
 
+
+
 // Schema for a single purchase order
 export const PurchaseSchema = z.object({
   id: z.string().uuid(),
@@ -31,31 +33,34 @@ export const PurchaseSchema = z.object({
 
 // Schema for creating a new purchase order
 export const PurchaseCreateSchema = z.object({
-  supplierId: z.string().uuid().optional(),
-  totalAmount: z.number().positive(),
-  paidAmount: z.number().positive(),
-  paymentStatus: PaymentStatusEnum,
-  status: PurchaseStatusEnum,
-  receivedAt: z.string().datetime().optional(),
-  items: z.array(z.object({
-    productId: z.string().uuid(),
-    productName: z.string().optional(), // Added for convenience in creation
-    quantity: z.number().int().positive(),
-    costPrice: z.number().positive(),
-  })).min(1, "At least one item is required"),
+  supplierId: z.string().uuid().nullable(), // Nullable since it's not `.notNull()`
+  totalAmount: z.coerce.number(),           // Decimal coerced to number
+  paidAmount: z.coerce.number(),            // Decimal coerced to number
+  paymentStatus: z.enum(["PAID", "PARTIAL", "CREDIT"]),
+  status: z.enum(["DRAFT", "RECEIVED", "CANCELLED"]),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().uuid(),
+        quantity: z.number().int().positive(),
+        costPrice: z.number().positive(),
+      })
+    )
+    .min(1),
+
 });
 
 // Schema for updating a purchase order
 export const PurchaseUpdateSchema = z.object({
-  supplierId: z.string().uuid().optional(),
+  supplierId: z.string().optional(),
   totalAmount: z.number().positive().optional(),
   paidAmount: z.number().positive().optional(),
   paymentStatus: PaymentStatusEnum.optional(),
   status: PurchaseStatusEnum.optional(),
   receivedAt: z.string().datetime().optional().nullable(),
   items: z.array(z.object({
-    id: z.string().uuid().optional(),
-    productId: z.string().uuid(),
+    id: z.string().optional(),
+    productId: z.string(),
     productName: z.string().optional(),
     quantity: z.number().int().positive(),
     costPrice: z.number().positive(),

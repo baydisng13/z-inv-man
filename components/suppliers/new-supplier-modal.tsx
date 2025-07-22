@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -12,21 +11,31 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import api from "@/apis";
 import {
   SupplierCreateSchema,
   SupplierCreateType,
+  SupplierType,
 } from "@/schemas/supplier-schema";
 import { Separator } from "../ui/separator";
 
 interface NewSupplierModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: (data: SupplierType) => void;
 }
 
-export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalProps) {
-  const [isVerifying, setIsVerifying] = useState(false);
+export default function NewSupplierModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: NewSupplierModalProps) {
   const form = useForm<SupplierCreateType>({
     resolver: zodResolver(SupplierCreateSchema),
     defaultValues: {
@@ -34,19 +43,41 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
     },
   });
 
-  const { mutate: createSupplier, isPending: isCreating } = api.Supplier.Create.useMutation({
-    onSuccess: () => {
+  const {
+    mutate: createSupplier,
+    isPending: isCreating,
+    isSuccess: isCreated,
+    data: responseData,
+  } = api.Supplier.Create.useMutation();
+
+
+  const {
+    mutate: getRegistrationInfoByTin,
+    isPending: isVerifying,
+    isSuccess: isFetched,
+    data: registrationInfo,
+  } = api.Helper.GetRegistrationInfoByTin.useMutation();
+
+  useEffect(() => {
+    if (isCreated) {
       onClose();
+      if (onSuccess) onSuccess(responseData);
       form.reset();
-    },
-  });
+    }
+  }, [isCreated]);
+
+  useEffect(() => {
+    if (isFetched) {
+      form.setValue("name", registrationInfo.LegalCondtion);
+      form.setValue("email", registrationInfo.RegNo);
+      form.setValue("phone", registrationInfo.RegDate);
+      form.setValue("address", registrationInfo.BusinessName);
+      form.setValue("country", registrationInfo.BusinessNameAmh);
+    }
+  }, [isFetched]);
 
   async function onVerify() {
-    setIsVerifying(true);
-    // Mock TIN verification
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    form.setValue("name", "Mock Supplier Name");
-    setIsVerifying(false);
+    getRegistrationInfoByTin(form.watch("tin_number"));
   }
 
   async function onSubmit(data: SupplierCreateType) {
@@ -71,7 +102,11 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
                     <FormControl>
                       <Input placeholder="Enter TIN number" {...field} />
                     </FormControl>
-                    <Button type="button" onClick={onVerify} disabled={isVerifying}>
+                    <Button
+                      type="button"
+                      onClick={onVerify}
+                      disabled={isVerifying}
+                    >
                       {isVerifying ? "Verifying..." : "Verify TIN"}
                     </Button>
                   </div>
@@ -147,8 +182,12 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
               )}
             />
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={isCreating}>Create Supplier</Button>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isCreating}>
+                Create Supplier
+              </Button>
             </div>
           </form>
         </Form>
@@ -156,4 +195,3 @@ export default function NewSupplierModal({ isOpen, onClose }: NewSupplierModalPr
     </Dialog>
   );
 }
-

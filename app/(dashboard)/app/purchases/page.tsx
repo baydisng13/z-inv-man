@@ -28,7 +28,7 @@ export default function PurchasesPage() {
   const filteredPurchases = purchasesData
     ? purchasesData.filter((purchase) => {
         // Assuming supplier name will be joined or fetched separately later
-        const supplierName = purchase.supplierId || ""; // Use supplierId as placeholder
+        const supplierName = purchase.supplier.name || purchase.supplierId || ""; // Use supplierId as placeholder
         const matchesSearch = supplierName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesPaymentStatus = paymentStatusFilter === "all" || purchase.paymentStatus === paymentStatusFilter;
         const matchesStatus = statusFilter === "all" || purchase.status === statusFilter;
@@ -127,16 +127,16 @@ export default function PurchasesPage() {
           <TableBody>
             {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
-                <TableCell className="font-medium">{purchase.supplierName || purchase.supplierId || "N/A"}</TableCell>
-                <TableCell>${parseFloat(purchase.totalAmount).toFixed(2)}</TableCell>
-                <TableCell>${parseFloat(purchase.paidAmount).toFixed(2)}</TableCell>
-                <TableCell>{getPaymentStatusBadge(purchase.paymentStatus)}</TableCell>
-                <TableCell>{getStatusBadge(purchase.status)}</TableCell>
-                <TableCell>
+                <TableCell  className="font-medium">{purchase.supplier.name || purchase.supplierId || "N/A"}</TableCell>
+                <TableCell  >${parseFloat(purchase.totalAmount).toFixed(2)}</TableCell>
+                <TableCell >${parseFloat(purchase.paidAmount).toFixed(2)}</TableCell>
+                <TableCell >{getPaymentStatusBadge(purchase.paymentStatus)}</TableCell>
+                <TableCell >{getStatusBadge(purchase.status)}</TableCell>
+                <TableCell >
                   {purchase.receivedAt ? new Date(purchase.receivedAt).toLocaleDateString() : "-"}
                 </TableCell>
-                <TableCell>{new Date(purchase.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
+                <TableCell key={`${purchase.id}-created`}>{new Date(purchase.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell key={`${purchase.id}-actions`} className="text-right">
                   <Button variant="ghost" size="sm">
                     View
                   </Button>
