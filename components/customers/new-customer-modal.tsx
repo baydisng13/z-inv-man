@@ -12,43 +12,39 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import api from "@/apis";
 import {
-  SupplierCreateSchema,
-  SupplierCreateType,
-  SupplierType,
-} from "@/schemas/supplier-schema";
+  CustomerCreateSchema,
+  CustomerCreateType,
+  CustomerType,
+} from "@/schemas/customer-schema";
 import { Separator } from "../ui/separator";
 import { useGlobalModal } from "@/store/useGlobalModal";
+import { Loader } from "lucide-react";
 
-interface NewSupplierModalProps {
-  onSuccess?: (data: SupplierType) => void;
+interface NewCustomerModalProps {
+  onSuccess?: (data: CustomerType) => void;
 }
 
-export default function NewSupplierModal({
+export default function NewCustomerModal({
   onSuccess,
-}: NewSupplierModalProps) {
+}: NewCustomerModalProps) {
 
   const {isOpen , closeModal} = useGlobalModal()
-  const form = useForm<SupplierCreateType>({
-    resolver: zodResolver(SupplierCreateSchema),
+  const form = useForm<CustomerCreateType>({
+    resolver: zodResolver(CustomerCreateSchema),
     defaultValues: {
       tin_number: "",
     },
   });
 
   const {
-    mutate: createSupplier,
+    mutate: createCustomer,
     isPending: isCreating,
     isSuccess: isCreated,
     data: responseData,
-  } = api.Supplier.Create.useMutation();
+  } = api.Customer.Create.useMutation();
 
 
   const {
@@ -83,45 +79,48 @@ export default function NewSupplierModal({
     }
   }
 
-  async function onSubmit(data: SupplierCreateType) {
-    createSupplier(data);
+  async function onSubmit(data: CustomerCreateType) {
+    createCustomer(data);
   }
 
   return (
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="gap-4 grid grid-cols-2">
             <FormField
               control={form.control}
               name="tin_number"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>TIN Number</FormLabel>
-                  <div className="flex gap-2">
+                <FormItem className="col-span-2">
+                  <FormLabel className="text-xs">TIN Number</FormLabel>
+                  <div className="flex gap-2 col-span-2">
                     <FormControl>
-                      <Input placeholder="Enter TIN number" {...field} />
+                      <Input className="text-xs" placeholder="Enter TIN number" {...field} />
                     </FormControl>
                     <Button
                       type="button"
                       onClick={onVerify}
                       disabled={isVerifying}
+                      className="space-x-2 text-xs"
                     >
-                      {isVerifying ? "Verifying..." : "Verify TIN"}
+                      {isVerifying && <Loader className="animate-spin h-4 w-4 " />}
+                      Verify TIN
+
                     </Button>
                   </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Separator />
+            <Separator className="my-4 col-span-2" />
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supplier Name</FormLabel>
+                  <FormLabel className="text-xs">Customer Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter supplier name" {...field} />
+                    <Input className="text-xs" placeholder="Enter customer name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,9 +131,9 @@ export default function NewSupplierModal({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-xs">Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Enter email" {...field} />
+                    <Input className="text-xs" type="email" placeholder="Enter email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -145,9 +144,9 @@ export default function NewSupplierModal({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel className="text-xs">Phone</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter phone number" {...field} />
+                    <Input className="text-xs" placeholder="Enter phone number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,9 +157,9 @@ export default function NewSupplierModal({
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel className="text-xs">Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter address" {...field} />
+                    <Input className="text-xs" placeholder="Enter address" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -171,20 +170,23 @@ export default function NewSupplierModal({
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Country</FormLabel>
+                  <FormLabel className="text-xs">Country</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter country" {...field} />
+                    <Input className="text-xs" placeholder="Enter country" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={closeModal}>
+            <div className="flex justify-end gap-2 col-span-2 py-6">
+              <Button type="button" variant="outline" size={"sm"} className="text-xs" onClick={closeModal}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating}>
-                Create Supplier
+              <Button type="submit" disabled={isCreating} size={"sm"} className="text-xs">
+                {
+                  isCreating && <Loader className="animate-spin h-4 w-4 mr-2" />
+                }
+                Create Customer
               </Button>
             </div>
           </form>

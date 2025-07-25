@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Search, Plus } from "lucide-react";
 import api from "@/apis";
 import useConfirmationStore from "@/store/confirmation";
@@ -11,14 +18,18 @@ import NewSupplierModal from "@/components/suppliers/new-supplier-modal";
 import EditSupplierModal from "@/components/suppliers/edit-supplier-modal";
 
 import queryClient from "@/lib/queryClient";
+import { useGlobalModal } from "@/store/useGlobalModal";
 
 export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewSupplierModalOpen, setIsNewSupplierModalOpen] = useState(false);
   const [isEditSupplierModalOpen, setIsEditSupplierModalOpen] = useState(false);
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
+    null
+  );
 
   const { OpenConfirmation } = useConfirmationStore();
+  const { openModal } = useGlobalModal();
 
   const {
     data: suppliersData,
@@ -35,9 +46,11 @@ export default function SuppliersPage() {
 
   const filteredSuppliers = suppliersData
     ? suppliersData.filter((supplier) => {
-        const matchesSearch = supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                            (supplier.phone && supplier.phone.includes(searchTerm));
+        const matchesSearch =
+          supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (supplier.email &&
+            supplier.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (supplier.phone && supplier.phone.includes(searchTerm));
         return matchesSearch;
       })
     : [];
@@ -50,9 +63,19 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Suppliers</h1>
-          <p className="text-muted-foreground">Manage your business suppliers</p>
+          <p className="text-muted-foreground">
+            Manage your business suppliers
+          </p>
         </div>
-        <Button onClick={() => setIsNewSupplierModalOpen(true)}>
+        <Button
+          onClick={() => {
+            openModal({
+              title: "Create New Supplier",
+              content: <NewSupplierModal />,
+              onClose: () => setIsNewSupplierModalOpen(false),
+            });
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Supplier
         </Button>
@@ -112,7 +135,7 @@ export default function SuppliersPage() {
                         actionLabel: "Delete",
                         onAction: () => deleteSupplier(supplier.id),
                         cancelLabel: "Cancel",
-                        onCancel: () => {}
+                        onCancel: () => {},
                       });
                     }}
                   >
@@ -124,20 +147,16 @@ export default function SuppliersPage() {
           </TableBody>
         </Table>
       </div>
-
-      <NewSupplierModal
-        isOpen={isNewSupplierModalOpen}
-        onClose={() => setIsNewSupplierModalOpen(false)}
-      />
-
-      <EditSupplierModal
-        isOpen={isEditSupplierModalOpen}
-        onClose={() => {
-          setIsEditSupplierModalOpen(false);
-          setSelectedSupplierId(null);
-        }}
-        supplierId={selectedSupplierId}
-      />
+      {selectedSupplierId && (
+        <EditSupplierModal
+          isOpen={isEditSupplierModalOpen}
+          onClose={() => {
+            setIsEditSupplierModalOpen(false);
+            setSelectedSupplierId(null);
+          }}
+          supplierId={selectedSupplierId}
+        />
+      )}
     </div>
   );
 }

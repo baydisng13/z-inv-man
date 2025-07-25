@@ -13,25 +13,22 @@ import {
   PurchaseCreateType,
   PurchaseUpdateType,
   PurchaseItemWithProductType,
+  PurchaseItemType,
 } from "@/schemas/purchase-schema";
 import { axiosInstance } from "@/lib/axios";
 import { buildQueryParams } from "@/lib/buildQueryParams";
 import { SupplierType } from "@/schemas/supplier-schema";
 import { User } from "better-auth";
+import { ListUsersQueryType } from "./admin";
+import { UserWithRole } from "better-auth/plugins";
+import { ProductType } from "@/schemas/product-schema";
 
 // type
-interface PurchaseItemWithProductResType {
-  id: string;
-  supplierId: string;
-  totalAmount: string;
-  paidAmount: string;
-  paymentStatus: string;
-  status: string;
-  receivedAt: any;
-  createdBy: string;
-  createdAt: string;
-  createdByUser: User
-  supplier: SupplierType
+
+export interface PurchaseItemWithProductResType extends PurchaseType {
+  createdByUser:UserWithRole;
+  supplier: SupplierType;
+  items: PurchaseItemWithProductType[];
 }
 
 // API Functions
@@ -117,7 +114,7 @@ export const Purchase = {
         PurchaseCreateType
       >({
         mutationFn: createPurchaseOrderFn,
-        onMutate: () => toast.loading("Creating purchase order..."),
+        onMutate: () => toast("Creating purchase order..."),
         onSuccess: () => {
           toast.success("Purchase order created successfully");
           queryClient.invalidateQueries({ queryKey: ["PurchaseOrders"] });
@@ -146,7 +143,7 @@ export const Purchase = {
         { id: string; data: PurchaseUpdateType }
       >({
         mutationFn: updatePurchaseOrderFn,
-        onMutate: () => toast.loading("Updating purchase order..."),
+        onMutate: () => toast("Updating purchase order..."),
         onSuccess: (data) => {
           toast.success("Purchase order updated successfully");
           queryClient.invalidateQueries({ queryKey: ["PurchaseOrders"] });
@@ -170,7 +167,7 @@ export const Purchase = {
     ) => {
       return useMutation<PurchaseType, AxiosError<ErrorRes>, string>({
         mutationFn: deletePurchaseOrderFn,
-        onMutate: () => toast.loading("Deleting purchase order..."),
+        onMutate: () => toast("Deleting purchase order..."),
         onSuccess: (_, id) => {
           toast.success("Purchase order deleted successfully");
           queryClient.invalidateQueries({ queryKey: ["PurchaseOrders"] });

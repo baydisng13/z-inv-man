@@ -45,8 +45,14 @@ export async function POST(req: NextRequest) {
   const newSupplier = await db
     .insert(suppliers)
     .values({
-      ...validation.data,
+      name: body.name,
+      phone: body.phone,
+      email: body.email,
+      address: body.address,
+      country: body.country,  
       createdBy: session.user.id,
+      tin_number: body.tin_number,
+      createdAt: new Date(),
     })
     .returning();
 

@@ -11,6 +11,8 @@ import { Search, Plus, Filter } from "lucide-react"
 
 import api from "@/apis";
 import NewPurchaseModal from "@/components/purchases/new-purchase-modal"
+import CustomerTableSkeleton from "@/components/customer-table-skeleton"
+import ReceiptModal from "@/components/purchases/receipt-modal"
 
 export default function PurchasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,7 +64,7 @@ export default function PurchasesPage() {
     }
   };
 
-  if (isLoading) return <div>Loading purchase orders...</div>;
+  if (isLoading) return <CustomerTableSkeleton />;
   if (isError) return <div>Error loading purchase orders: {error?.message}</div>;
 
   return (
@@ -137,9 +139,8 @@ export default function PurchasesPage() {
                 </TableCell>
                 <TableCell key={`${purchase.id}-created`}>{new Date(purchase.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell key={`${purchase.id}-actions`} className="text-right">
-                  <Button variant="ghost" size="sm">
-                    View
-                  </Button>
+                 
+                  <ReceiptModal  purchase={purchase} />
                 </TableCell>
               </TableRow>
             ))}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export default function NewPurchaseModal() {
   const form = useForm<PurchaseCreateType>({
     resolver: zodResolver(PurchaseCreateSchema),
     defaultValues: {
-      supplierId: "",
+      supplierId: null,
       totalAmount: 0,
       paidAmount: 0,
       paymentStatus: "PAID",
@@ -68,44 +68,41 @@ export default function NewPurchaseModal() {
     name: "items",
   });
 
-  const { mutate: createPurchaseOrder, isPending: isCreating } =
-    api.Purchase.Create.useMutation({
-      onSuccess: () => {
-        toast.success("Purchase order created successfully!");
-        setIsOpen(false);
+  const { mutate: createPurchaseOrder, isPending: isCreating , isSuccess: isCreated } =
+    api.Purchase.Create.useMutation();
+
+
+    useEffect(() => {
+      if (isCreated) {
         form.reset();
-      },
-      onError: (error) => {
-        toast.error(`Failed to create purchase order: ${error.message}`);
-      },
-    });
+        setIsOpen(false);
+      }
+    }, [isCreated]);
 
   async function onSubmit(data: PurchaseCreateType) {
     createPurchaseOrder(data);
   }
+    
+const items = useWatch({ control: form.control, name: "items" });
+const paymentStatus = useWatch({ control: form.control, name: "paymentStatus" });
 
-  const { data: products, isLoading: isLoadingProducts } =
-    api.Product.GetAll.useQuery();
 
-  const watchedItems = form.watch("items");
-  const paymentStatus = form.watch("paymentStatus");
-  const watchedTotalAmount = form.watch("totalAmount");
-  const watchedPaidAmount = form.watch("paidAmount");
+useEffect(() => {
+  const total = items.reduce(
+    (acc, item) => acc + (item.quantity || 0) * (item.costPrice || 0),
+    0
+  );
 
-  useEffect(() => {
-    const total = watchedItems.reduce(
-      (acc, item) => acc + (item.quantity || 0) * (item.costPrice || 0),
-      0
-    );
-    form.setValue("totalAmount", total);
+  form.setValue("totalAmount", total);
 
-    if (paymentStatus === "PAID") {
-      form.setValue("paidAmount", total);
-    } else if (paymentStatus === "CREDIT") {
-      form.setValue("paidAmount", 0);
-    }
-  }, [form.watch("items"), form.watch("paymentStatus")]);
-
+  if (paymentStatus === "PAID") {
+    form.setValue("paidAmount", total);
+  } else if (paymentStatus === "CREDIT") {
+    form.setValue("paidAmount", 0);
+  } else if (paymentStatus === "PARTIAL") {
+    form.setValue("paidAmount", total);
+  }
+}, [items, paymentStatus, form]);
 
 
   return (
@@ -113,7 +110,7 @@ export default function NewPurchaseModal() {
       <DialogTrigger asChild>
         <Button>Create New Purchase Order</Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[1000px] max- max-h-[90vh]">
+      <DialogContent className="min-w-[1000px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Create New Purchase Order</DialogTitle>
         </DialogHeader>
@@ -148,9 +145,7 @@ export default function NewPurchaseModal() {
                                   )}
 
                                   <ProductSelect
-                                    control={form.control}
                                     name={`items.${index}.productId`}
-                                    errors={form.formState.errors}
                                     disabledProductIds={selectedProductIds}
                                   />
 
@@ -259,18 +254,11 @@ export default function NewPurchaseModal() {
                   {JSON.stringify(form.watch(), null, 2)}
                   {JSON.stringify(form.formState.errors, null, 2)}
                 </pre> */}
-
-          
               </div>
 
               <div className="col-span-1 space-y-6">
                 <div className="p-4 border rounded-lg">
-         
-                  <SupplierSelect
-                    control={form.control}
-                    name="supplierId"
-                    errors={form.formState.errors}
-                  />
+                  <SupplierSelect name="supplierId" />
                 </div>
 
                 <AdvancedPurchaseOptions />
@@ -283,7 +271,12 @@ export default function NewPurchaseModal() {
                   {/* remaining amount */}
                   <div className="flex justify-between">
                     <span>Remaining Amount</span>
-                    <span>${(form.watch("totalAmount") - form.watch("paidAmount")).toFixed(2)}</span>
+                    <span>
+                      $
+                      {(
+                        form.watch("totalAmount") - form.watch("paidAmount")
+                      ).toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between font-semibold">
                     <span>Total Amount</span>

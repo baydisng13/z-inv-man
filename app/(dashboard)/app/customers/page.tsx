@@ -1,137 +1,191 @@
-"use client"
-
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus } from "lucide-react"
-
-// Mock data
-const customers = [
-  {
-    id: 1,
-    name: "John Smith",
-    phone: "+1 (555) 234-5678",
-    email: "john.smith@email.com",
-    country: "United States",
-    address: "123 Main Street, New York, NY 10001",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    phone: "+1 (555) 345-6789",
-    email: "sarah.j@email.com",
-    country: "Canada",
-    address: "456 Oak Avenue, Vancouver, BC V6B 1A1",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: 3,
-    name: "Mike Wilson",
-    phone: "+44 20 7123 4567",
-    email: "mike.wilson@email.co.uk",
-    country: "United Kingdom",
-    address: "789 High Street, Manchester, M1 1AA",
-    createdAt: "2024-01-13",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    phone: "+61 2 9876 5432",
-    email: "emily.davis@email.com.au",
-    country: "Australia",
-    address: "321 Collins Street, Melbourne, VIC 3000",
-    createdAt: "2024-01-12",
-  },
-]
+"use client";
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { Customer } from "@/apis/customers";
+import EditCustomerModal from "@/components/customers/edit-customer-modal";
+import NewCustomerModal from "@/components/customers/new-customer-modal";
+import { useGlobalModal } from "@/store/useGlobalModal";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
+import CustomerTableSkeleton from "@/components/customer-table-skeleton";
+import { Label } from "@/components/ui/label";
+import { CustomerType } from "@/schemas/customer-schema";
 
 export default function CustomersPage() {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerType | null>(
+    null
+  );
+  const { openModal } = useGlobalModal();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.country.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const { data: customers, isLoading } = Customer.GetAll.useQuery();
+
+  const filteredCustomers = useMemo(() => {
+    if (!customers) return [];
+    return customers.filter((customer) =>
+      Object.values(customer).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [customers, searchTerm]);
+
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    return filteredCustomers.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredCustomers, currentPage, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage);
+
+  const handleEdit = (c: CustomerType) => {
+    setSelectedCustomer(c);
+    setIsEditModalOpen(true);
+  };
+
+  const renderPagination = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    const halfMaxPages = Math.floor(maxPagesToShow / 2);
+    let startPage = Math.max(1, currentPage - halfMaxPages);
+    let endPage = Math.min(totalPages, currentPage + halfMaxPages);
+
+    if (currentPage - 1 <= halfMaxPages) {
+      endPage = Math.min(totalPages, maxPagesToShow);
+    }
+
+    if (totalPages - currentPage < halfMaxPages) {
+      startPage = Math.max(1, totalPages - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+              <ChevronsLeft />
+            </Button>
+          </PaginationItem>
+          <PaginationItem>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+              <ChevronLeft />
+            </Button>
+          </PaginationItem>
+          {startPage > 1 && <PaginationItem>...</PaginationItem>}
+          {pageNumbers.map((page) => (
+            <PaginationItem key={page}>
+              <PaginationLink href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(page); }} isActive={currentPage === page}>
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          {endPage < totalPages && <PaginationItem>...</PaginationItem>}
+          <PaginationItem>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
+              <ChevronRight />
+            </Button>
+          </PaginationItem>
+          <PaginationItem>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+              <ChevronsRight />
+            </Button>
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer relationships</p>
-        </div>
-        <Link href="/customers/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Customer
-          </Button>
-        </Link>
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Customers</h1>
+        <Button onClick={() => openModal({ title: "Create New Customer", content: <NewCustomerModal /> })}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Customer
+        </Button>
       </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search customers by name, email, or country..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      <div className="relative mb-4">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search customers..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-8"
+        />
       </div>
-
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Country</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Added</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCustomers.map((customer) => (
-              <TableRow key={customer.id}>
-                <TableCell className="font-medium">{customer.name}</TableCell>
-                <TableCell>{customer.phone}</TableCell>
-                <TableCell>{customer.email}</TableCell>
-                <TableCell>{customer.country}</TableCell>
-                <TableCell className="max-w-xs truncate">{customer.address}</TableCell>
-                <TableCell>{new Date(customer.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
-                  <Link href={`/customers/${customer.id}`}>
-                    <Button variant="ghost" size="sm">
+      {isLoading ? (
+        <CustomerTableSkeleton />
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>TIN Number</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedCustomers.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell>{customer.name}</TableCell>
+                  <TableCell>{customer.tin_number}</TableCell>
+                  <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.phone}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(customer)}
+                    >
                       Edit
                     </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Showing {filteredCustomers.length} of {customers.length} customers
-        </p>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>
-            Previous
-          </Button>
-          <Button variant="outline" size="sm" disabled>
-            Next
-          </Button>
-        </div>
-      </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+           <div className="flex justify-between items-center mt-4 w-full ">
+            <div className="flex flex-col w-full  gap-2">
+              <Label>Rows per page:</Label>
+              <Select onValueChange={(value) => setRowsPerPage(Number(value))}>
+                <SelectTrigger className="">
+                  <SelectValue placeholder={rowsPerPage} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 20, 50].map((value) => (
+                    <SelectItem key={value} value={String(value)}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">
+                {`Showing ${paginatedCustomers.length} of ${filteredCustomers.length} customers`}
+              </span>
+            </div>
+            {renderPagination()}
+          </div>
+        </>
+      )}
+      {selectedCustomer && (
+        <EditCustomerModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          customer={selectedCustomer}
+        />
+      )}
     </div>
-  )
+  );
 }

@@ -11,95 +11,113 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import api from "@/apis";
 import {
-  SupplierUpdateSchema,
-  SupplierUpdateType,
-} from "@/schemas/supplier-schema";
+  CustomerType,
+  CustomerUpdateSchema,
+  CustomerUpdateType,
+} from "@/schemas/customer-schema";
+import { Separator } from "../ui/separator";
 
-interface EditSupplierModalProps {
+interface EditCustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  supplierId: string ;
+  customer: CustomerType;
 }
 
-export default function EditSupplierModal({ isOpen, onClose, supplierId }: EditSupplierModalProps) {
-  const form = useForm<SupplierUpdateType>({
-    resolver: zodResolver(SupplierUpdateSchema),
-  });
-
-  const { data: supplier, isLoading, isError } = api.Supplier.GetById.useQuery(supplierId as string);
-
-  const { mutate: updateSupplier, isPending: isUpdating } = api.Supplier.Update.useMutation({
-    onSuccess: () => {
-      onClose();
+export default function EditCustomerModal({
+  isOpen,
+  onClose,
+  customer,
+}: EditCustomerModalProps) {
+  const form = useForm<CustomerUpdateType>({
+    resolver: zodResolver(CustomerUpdateSchema),
+    defaultValues: {
+      name: customer.name,
     },
   });
 
-  useEffect(() => {
-    if (supplier) {
-      form.reset(supplier);
-    }
-  }, [supplier, form]);
+  const { mutate: updateCustomer, isPending: isUpdating } =
+    api.Customer.Update.useMutation({
+      onSuccess: () => {
+        onClose();
+      },
+    });
 
-  async function onSubmit(data: SupplierUpdateType) {
-    if (supplierId) {
-      updateSupplier({ id: supplierId, data });
+  const {
+    mutate: getRegistrationInfoByTin,
+    isPending: isVerifying,
+    isSuccess: isFetched,
+    data: registrationInfo,
+  } = api.Helper.GetRegistrationInfoByTin.useMutation();
+
+  useEffect(() => {
+    if (customer) {
+      form.reset(customer);
+    }
+  }, [customer, form]);
+
+  async function onVerify() {
+    const tin = form.watch("tin_number");
+    if (tin) {
+      getRegistrationInfoByTin(tin);
+    } else {
+      form.setError("tin_number", { message: "TIN number is required" });
     }
   }
 
-  if (isLoading) return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Loading Supplier...</DialogTitle>
-        </DialogHeader>
-        <div>Loading...</div>
-      </DialogContent>
-    </Dialog>
-  );
-
-  if (isError) return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Error Loading Supplier</DialogTitle>
-        </DialogHeader>
-        <div>Error loading supplier.</div>
-      </DialogContent>
-    </Dialog>
-  );
+  async function onSubmit(data: CustomerUpdateType) {
+    updateCustomer({ id: customer.id, data });
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Supplier</DialogTitle>
+          <DialogTitle>Edit Customer</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="gap-4 grid grid-cols-2"
+          >
             <FormField
               control={form.control}
               name="tin_number"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-2">
                   <FormLabel>TIN Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter TIN number" {...field} disabled />
-                  </FormControl>
+                  <div className="flex gap-2 col-span-2">
+                    <FormControl>
+                      <Input placeholder="Enter TIN number" {...field} />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      onClick={onVerify}
+                      disabled={isVerifying}
+                    >
+                      {isVerifying ? "Verifying..." : "Verify TIN"}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            <Separator className="my-4 col-span-2" />
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supplier Name</FormLabel>
+                  <FormLabel>Customer Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter supplier name" {...field} />
+                    <Input placeholder="Enter customer name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,9 +175,13 @@ export default function EditSupplierModal({ isOpen, onClose, supplierId }: EditS
                 </FormItem>
               )}
             />
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={isUpdating}>Update Supplier</Button>
+            <div className="flex justify-end gap-2 col-span-2 py-6">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUpdating}>
+                Update Customer
+              </Button>
             </div>
           </form>
         </Form>

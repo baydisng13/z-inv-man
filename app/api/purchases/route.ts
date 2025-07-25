@@ -14,159 +14,232 @@ import { headers } from "next/headers";
 import { eq, sql } from "drizzle-orm";
 import { PurchaseCreateSchema } from "@/schemas/purchase-schema";
 
-export async function GET(req: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+async function IsAuthnticated() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(), // you need to pass the headers object.
+    });
 
-  if (!session) {
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
+    return session;
+  } catch (error) {
+    // redirect to login page
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+}
+
+export async function GET(req: NextRequest) {
+  const session = await IsAuthnticated();
 
   const allPurchases = await db.query.purchases.findMany({
     with: {
       createdByUser: true,
       supplier: true,
+      items: {
+        with: {
+          product: true, 
+        },
+      },
     },
   });
 
-  console.log("All Purchases with Suppliers:", allPurchases);
   return NextResponse.json(allPurchases);
 }
 
 // export async function POST(req: NextRequest) {
-//   const session = await auth.api.getSession({
-//     headers: await headers(), // you need to pass the headers object.
-//   });
+//   try {
+//     // Step 1: Authentication & Authorization
+//     // Uses the standard next-auth helper to get the session.
+//     // This is more robust than manually handling headers.
+//     const session = await auth.api.getSession({
+//       headers: await headers(),
+//     });
+//     if (!session?.user?.id) {
+//       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+//     }
+//     const userId = session.user.id;
 
-//   if (!session) {
-//     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+//     // Step 2: Request Body Parsing and Validation
+//     // The request body is parsed and then validated against the Zod schema.
+//     const body = await req.json();
+//     const validation = PurchaseCreateSchema.safeParse(body);
+
+//     if (!validation.success) {
+//       // If validation fails, return a 400 response with detailed errors.
+//       return NextResponse.json(
+//         {
+//           message: "Invalid request data",
+//           errors: validation.error.flatten().fieldErrors,
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Destructure validated data for easier access.
+//     const { items, ...purchaseData } = validation.data;
+
+//     // Step 3: Database Transaction
+//     // A transaction ensures that all database operations are atomic.
+//     // If any part of this block fails, all previous operations are rolled back.
+//     const newPurchase = await db.transaction(async (tx) => {
+//       // 3a: Insert the main purchase record.
+//       const [createdPurchase] = await tx
+//         .insert(purchases)
+//         .values({
+//           ...purchaseData,
+//           // Storing monetary values as strings is a good practice to avoid float precision issues.
+//           totalAmount: purchaseData.totalAmount.toString(),
+//           paidAmount: purchaseData.paidAmount.toString(),
+//           // Conditionally set the 'receivedAt' timestamp.
+//           receivedAt: purchaseData.status === "RECEIVED" ? new Date() : null,
+//           createdBy: userId,
+//           // createdAt is set by default in the schema or here. Let's be explicit.
+//           createdAt: new Date(),
+//         })
+//         .returning(); // .returning() gets the newly created record back.
+
+//         console.log("Created purchase:", createdPurchase);
+
+//       // 3b: Prepare and insert all purchase items in a single batch.
+//       if (items.length > 0) {
+//         const purchaseItemsValues = items.map((item) => ({
+//           ...item,
+//           purchaseId: createdPurchase.id,
+//           costPrice: item.costPrice.toString(), // Convert decimal to string
+//         }));
+//         await tx.insert(purchaseItems).values(purchaseItemsValues);
+//       }
+
+//       console.log("Inserted purchase items");
+
+//       // 3c: Only update inventory if the purchase status is 'RECEIVED'.
+//       if (purchaseData.status === "RECEIVED" && items.length > 0) {
+//         // 3c-i: Atomically update inventory for each item.
+//         for (const item of items) {
+//           await tx
+//             .update(inventoryStock)
+//             .set({
+//               quantity: sql`${inventoryStock.quantity} + ${item.quantity}`,
+//               lastUpdatedAt: sql`NOW()`,
+//             })
+//             .where(eq(inventoryStock.productId, item.productId));
+//           }
+
+//         console.log("Updated inventory stock");
+
+//         // 3c-ii: Create all stock movement records in a single batch for auditing.
+//         const stockMovementValues = items.map((item) => ({
+//           productId: item.productId,
+//           type: "IN" as const,
+//           quantity: item.quantity,
+//           referenceType: "PURCHASE" as const,
+//           referenceId: createdPurchase.id,
+//           createdBy: userId,
+//         }));
+//         await tx.insert(stockMovements).values(stockMovementValues);
+
+//         console.log("Created stock movement records");
+//       }
+
+//       // Return the newly created purchase record from the transaction.
+//       return createdPurchase;
+//     });
+
+//     // Step 4: Success Response
+//     // If the transaction is successful, return the created purchase with a 201 status.
+//     return NextResponse.json(newPurchase, { status: 201 });
+//   } catch (error) {
+//     // Step 5: Global Error Handling
+//     console.error("Purchase creation failed:", error);
+//     // Return a generic 500 error to avoid leaking implementation details.
+//     return NextResponse.json(
+//       { message: "Failed to create purchase due to a server error." },
+//       { status: 500 }
+//     );
 //   }
-
-//   const body = await req.json();
-//   const validation = PurchaseCreateSchema.safeParse(body);
-
-//   if (!validation.success) {
-//     return NextResponse.json(validation.error.errors, { status: 400 });
-//   }
-
-//   const { items, ...purchaseData } = validation.data;
-
-//   const newPurchase = await db
-//     .insert(purchases)
-//     .values({
-//       ...purchaseData,
-//       totalAmount: purchaseData.totalAmount.toString(),
-//       paidAmount: purchaseData.paidAmount.toString(),
-//       receivedAt: new Date(),
-//       supplierId: purchaseData.supplierId || null,
-//       status: purchaseData.status,
-//       createdBy: session.user.id,
-//     })
-//     .returning();
-
-//   const purchaseId = newPurchase[0].id;
-
-//   const newPurchaseItems = items.map((item) => ({
-//     ...item,
-//     purchaseId,
-//     costPrice: item.costPrice.toString(), // Convert decimal to string
-//   }));
-
-//   await db.insert(purchaseItems).values(newPurchaseItems);
-
-//   return NextResponse.json(newPurchase[0]);
 // }
 
-
-
-
-
-
 export async function POST(req: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = await req.json();
-  const validation = PurchaseCreateSchema.safeParse(body);
-
-  if (!validation.success) {
-    return NextResponse.json(validation.error.errors, { status: 400 });
-  }
-
-  const { items, ...purchaseData } = validation.data;
-
   try {
-    const result = await db.transaction(async (tx) => {
-      // Step 1: Insert the main purchase record.
-      // We use array destructuring to get the first (and only) result.
-      const [newPurchase] = await tx
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const body = await req.json();
+    const validation = PurchaseCreateSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          message: "Invalid request data",
+          errors: validation.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { items, ...purchaseData } = validation.data;
+
+    const newPurchase = await db.transaction(async (tx) => {
+      const [createdPurchase] = await tx
         .insert(purchases)
         .values({
           ...purchaseData,
-          createdBy: session.user.id,
-          createdAt: new Date(),
           totalAmount: purchaseData.totalAmount.toString(),
           paidAmount: purchaseData.paidAmount.toString(),
-          // Only set the 'receivedAt' timestamp if the status confirms receipt.
           receivedAt: purchaseData.status === "RECEIVED" ? new Date() : null,
+          createdBy: userId,
+          createdAt: new Date(),
         })
         .returning();
 
-      // Step 2: Prepare and insert all purchase items in a single batch.
-      const purchaseItemsValues = items.map((item) => ({
-        ...item,
-        purchaseId: newPurchase.id,
-        costPrice: item.costPrice.toString(), // Convert decimal to string
-      }));
-      await tx.insert(purchaseItems).values(purchaseItemsValues);
+      if (items.length > 0) {
+        const purchaseItemsValues = items.map((item) => ({
+          ...item,
+          purchaseId: createdPurchase.id,
+          costPrice: item.costPrice.toString(),
+        }));
+        await tx.insert(purchaseItems).values(purchaseItemsValues);
+      }
 
-      // Step 3: Only update inventory if the purchase status is 'RECEIVED'.
-      // This prevents draft or pending purchases from affecting stock levels.
-      if (purchaseData.status === "RECEIVED") {
-        
-        // 3a. Atomically Update Inventory Stock (UPSERT)
-        // Using a for...of loop is more reliable for sequential operations within a transaction.
-// This sequential loop is the correct and reliable solution
-for (const item of items) {
-  await tx.insert(inventoryStock).values({
-    productId: item.productId,
-    quantity: item.quantity,
-  }).onConflictDoUpdate({
-    target: inventoryStock.productId,
-    set: {
-      quantity: sql`${inventoryStock.quantity} + ${item.quantity}`,
-      lastUpdatedAt: new Date(),
-    }
-  });
-}
-        
-        // 3b. Create all stock movement records in a single batch operation.
+      if (purchaseData.status === "RECEIVED" && items.length > 0) {
+        for (const item of items) {
+          await tx
+            .update(inventoryStock)
+            .set({
+              quantity: sql`${inventoryStock.quantity} + ${item.quantity}`,
+              lastUpdatedAt: sql`NOW()`,
+            })
+            .where(eq(inventoryStock.productId, item.productId));
+        }
+
         const stockMovementValues = items.map((item) => ({
           productId: item.productId,
           type: "IN" as const,
           quantity: item.quantity,
           referenceType: "PURCHASE" as const,
-          referenceId: newPurchase.id,
-          createdBy: session.user.id,
+          referenceId: createdPurchase.id,
+          createdBy: userId,
         }));
         await tx.insert(stockMovements).values(stockMovementValues);
       }
 
-      // Return the newly created purchase record.
-      return newPurchase;
+      return createdPurchase;
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(newPurchase, { status: 201 });
   } catch (error) {
     console.error("Purchase creation failed:", error);
     return NextResponse.json(
-      { message: "Failed to create purchase", error: String(error) },
+      { message: "Failed to create purchase due to a server error." },
       { status: 500 }
     );
   }

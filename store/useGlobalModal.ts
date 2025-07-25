@@ -5,6 +5,7 @@ interface GlobalModalState {
   isOpen: boolean
   title?: string
   content?: ReactNode
+  className?: string
   onClose?: () => void
   openModal: (params: { title?: string; content: ReactNode; onClose?: () => void }) => void
   closeModal: () => void
@@ -15,6 +16,7 @@ export const useGlobalModal = create<GlobalModalState>((set) => ({
   title: undefined,
   content: null,
   onClose: undefined,
+  className: "",
   openModal: ({ title, content, onClose }) =>
     set({ isOpen: true, title, content, onClose }),
   closeModal: () =>
@@ -25,6 +27,7 @@ export const useGlobalModal = create<GlobalModalState>((set) => ({
         title: undefined,
         content: null,
         onClose: undefined,
+        className: "",
       }
     }),
 }))

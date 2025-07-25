@@ -1,46 +1,65 @@
 "use client";
 
-import React from "react";
-import { Control, FieldErrors } from "react-hook-form";
+import React, { useCallback, useMemo } from "react";
+import { Control, FieldErrors, useFormContext } from "react-hook-form";
 
 import api from "@/apis";
 import NewSupplierModal from "../suppliers/new-supplier-modal";
-import { AdvancedSelect } from "../AdvancedSelectInput";
+import { SimpleSelect } from "../SimpleSelect";
+import { useGlobalModal } from "@/store/useGlobalModal";
+import { Button } from "@/components/ui/button";
 
 interface SupplierSelectProps {
-  control: Control<any>;
   name: string;
-  errors: FieldErrors<any>;
 }
 
 const SupplierSelect: React.FC<SupplierSelectProps> = ({
-  control,
   name,
-  errors,
 }) => {
+  const { setValue } = useFormContext();
+  const { openModal, closeModal } = useGlobalModal();
+
+  const { data: suppliers, isLoading } = api.Supplier.GetAll.useQuery();
+
+  const options = useMemo(() => {
+    return (
+      suppliers?.map((supplier) => ({
+        label: supplier.name,
+        value: supplier.id,
+      })) || []
+    );
+  }, [suppliers]);
+
+  const handleNewSupplierSuccess = useCallback(
+    (newSupplier: any) => {
+      setValue(name, newSupplier.id);
+      closeModal();
+    },
+    [setValue, name, closeModal]
+  );
+
+  const handleCreateNew = () => {
+    openModal({
+      title: "Create New Supplier",
+      content: <NewSupplierModal onSuccess={handleNewSupplierSuccess} />,
+    });
+  };
+
   return (
-    <AdvancedSelect
-      // Pass react-hook-form props
-      control={control}
-      name={name}
-      errors={errors}
-      
-      // Provide the specific data fetching hook for suppliers
-      useQueryHook={api.Supplier.GetAll.useQuery}
-      
-      // Specify the keys for value ("id") and label ("name")
-      itemValueKey="id"
-      itemLabelKey="name"
-      
-      // Provide UI text for the supplier context
-      label="Supplier"
-      selectPlaceholder="Select supplier"
-      searchPlaceholder="Search suppliers..."
-      emptyStateText="No supplier found."
-      
-      // Provide the specific modal component for creating a new supplier
-      NewItemModal={NewSupplierModal}
-    />
+    <div className="flex flex-col gap-2">
+      <SimpleSelect
+        name={name}
+        label="Supplier"
+        placeholder="Select supplier"
+        searchPlaceholder="Search suppliers..."
+        emptyStateText="No supplier found."
+        options={options}
+        isLoading={isLoading}
+      />
+      <Button type="button" variant="outline" onClick={handleCreateNew}>
+        Add New Supplier
+      </Button>
+    </div>
   );
 };
 

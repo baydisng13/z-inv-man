@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Schema for a single supplier
-export const SupplierSchema = z.object({
+// Schema for a single customer
+export const CustomerSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, "Name is required"),
   tin_number: z.string().min(1, "TIN Number is required").optional(),
@@ -14,8 +14,8 @@ export const SupplierSchema = z.object({
   updatedAt: z.string(),
 });
 
-// Schema for creating a new supplier
-export const SupplierCreateSchema = SupplierSchema.pick({
+// Schema for creating a new customer
+export const CustomerCreateSchema = CustomerSchema.pick({
   name: true,
   tin_number: true,
   phone: true,
@@ -24,10 +24,10 @@ export const SupplierCreateSchema = SupplierSchema.pick({
   country: true,
 });
 
-// Schema for updating a supplier
-export const SupplierUpdateSchema = SupplierCreateSchema.partial();
+// Schema for updating a customer
+export const CustomerUpdateSchema = CustomerCreateSchema.partial();
 
 // Type definitions inferred from schemas
-export type SupplierType = z.infer<typeof SupplierSchema>;
-export type SupplierCreateType = z.infer<typeof SupplierCreateSchema>;
-export type SupplierUpdateType = z.infer<typeof SupplierUpdateSchema>;
+export type CustomerType = z.infer<typeof CustomerSchema>;
+export type CustomerCreateType = z.infer<typeof CustomerCreateSchema>;
+export type CustomerUpdateType = z.infer<typeof CustomerUpdateSchema>;

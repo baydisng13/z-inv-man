@@ -73,7 +73,7 @@ const Helper = {
     ) => {
       return useMutation({
         mutationFn: getRegistrationInfoByTinFn,
-        onMutate: () => toast.loading("Fetching registration info..."),
+        onMutate: () => toast("Fetching registration info..."),
         onSuccess: () => {
           toast.success("Registration info fetched successfully");
         },

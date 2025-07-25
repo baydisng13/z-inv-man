@@ -1,41 +1,40 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Control, FieldErrors } from "react-hook-form";
 
-import api from "@/apis"; // Assuming your API hook for products is here
-import { AdvancedSelect } from "../AdvancedSelectInput";
+import api from "@/apis";
+import { SimpleSelect } from "../SimpleSelect";
 
 interface ProductSelectProps {
-  control: Control<any>;
   name: string;
-  errors: FieldErrors<any>;
-  disabledProductIds?: string[]; // Pass the array of selected product IDs
+  disabledProductIds?: string[];
 }
 
 const ProductSelect: React.FC<ProductSelectProps> = ({
-  control,
   name,
-  errors,
   disabledProductIds,
 }) => {
+  const { data: products, isLoading } = api.Product.GetAll.useQuery();
+
+  const options = useMemo(() => {
+    if (!products) return [];
+    return products
+      .map((product) => ({
+        label: product.name,
+        value: product.id,
+      }));
+  }, [products, disabledProductIds]);
+
   return (
-    <AdvancedSelect
-      control={control}
+    <SimpleSelect
       name={name}
-      errors={errors}
-      // Provide the specific data fetching hook for products
-      useQueryHook={api.Product.GetAll.useQuery} // Assumes this hook exists
-      // Specify the keys for value ("id") and label ("name")
-      itemValueKey="id"
-      itemLabelKey="name"
-      // UI Text
-      selectPlaceholder="Select a product"
+      placeholder="Select a product"
       searchPlaceholder="Search products..."
-      emptyStateText="No product found."
-      newItemPageUrl="/app/products/new"
-      disabledItemValues={disabledProductIds}
-      popoverContentClassName="w-[200px]"
+      emptyStateText={isLoading ? "Loading products..." : "No product found."}
+      options={options}
+      isLoading={isLoading}
+      disabledKeys={disabledProductIds} 
     />
   );
 };

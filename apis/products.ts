@@ -155,7 +155,7 @@ export const Product = {
     ) => {
       return useMutation<ProductType, AxiosError<ErrorRes>, string>({
         mutationFn: (id) => updateProductFn({ id, data: { isArchived: false } }),
-        onMutate: () => toast.loading("Unarchiving product..."),
+        onMutate: () => toast("Unarchiving product..."),
         onSuccess: (_, id) => {
           toast.success("Product unarchived successfully");
           queryClient.invalidateQueries({ queryKey: ["Products"] });

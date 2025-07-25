@@ -13,10 +13,15 @@ function Provider({
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <QueryClientProvider client={queryClient}>
-      <NextThemesProvider {...props}>{children}</NextThemesProvider>
-      <GlobalModal />
-      <ConfirmationDialog />
-      <Toaster />
+      <NextThemesProvider {...props}>
+        <>
+          {children}
+
+          <GlobalModal />
+          <ConfirmationDialog />
+          <Toaster />
+        </>
+      </NextThemesProvider>
     </QueryClientProvider>
   );
 }

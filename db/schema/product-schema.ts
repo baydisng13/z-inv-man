@@ -12,13 +12,6 @@ import {
 import { user } from "./auth-schema";
 import { relations } from "drizzle-orm";
 
-
-
-
-
-
-
-
 ///////////////////////
 // PRODUCTS
 ///////////////////////
@@ -41,19 +34,12 @@ export const products = pgTable("products", {
   isArchived: boolean("is_archived").default(false).notNull(),
 });
 
-
-
 export const productRelations = relations(products, ({ one }) => ({
   createdByUser: one(user, {
     fields: [products.createdBy],
     references: [user.id],
   }),
 }));
-
-
-
-
-
 
 ///////////////////////
 // INVENTORY STOCK (cache)
@@ -69,22 +55,12 @@ export const inventoryStock = pgTable("inventory_stock", {
   }).defaultNow(),
 });
 
-
 export const inventoryStockRelations = relations(inventoryStock, ({ one }) => ({
   product: one(products, {
     fields: [inventoryStock.productId],
     references: [products.id],
   }),
 }));
-
-
-
-
-
-
-
-
-
 
 ///////////////////////
 // STOCK MOVEMENTS
@@ -106,19 +82,12 @@ export const stockMovements = pgTable("stock_movements", {
     .notNull(),
 });
 
-
-export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({ 
+export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
   createdByUser: one(user, {
     fields: [stockMovements.createdBy],
     references: [user.id],
   }),
 }));
-
-
-
-
-
-
 
 ///////////////////////
 // PURCHASES
@@ -139,7 +108,7 @@ export const purchases = pgTable("purchases", {
     .notNull(),
 });
 
-export const purchasesRelations = relations(purchases, ({ one }) => ({
+export const purchasesRelations = relations(purchases, ({ one, many }) => ({
   supplier: one(suppliers, {
     fields: [purchases.supplierId],
     references: [suppliers.id],
@@ -148,11 +117,8 @@ export const purchasesRelations = relations(purchases, ({ one }) => ({
     fields: [purchases.createdBy],
     references: [user.id],
   }),
+  items: many(purchaseItems)
 }));
-
-
-
-
 
 export const purchaseItems = pgTable("purchase_items", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -166,7 +132,6 @@ export const purchaseItems = pgTable("purchase_items", {
   costPrice: decimal("cost_price", { precision: 12, scale: 2 }).notNull(),
 });
 
-
 export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
   purchase: one(purchases, {
     fields: [purchaseItems.purchaseId],
@@ -177,14 +142,6 @@ export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
     references: [products.id],
   }),
 }));
-
-
-
-
-
-
-
-
 
 ///////////////////////
 // SALES
@@ -220,9 +177,6 @@ export const salesRelations = relations(sales, ({ one }) => ({
   }),
 }));
 
-
-
-
 export const saleItems = pgTable("sale_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   saleId: uuid("sale_id")
@@ -236,7 +190,6 @@ export const saleItems = pgTable("sale_items", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
 });
 
-
 export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   sale: one(sales, {
     fields: [saleItems.saleId],
@@ -248,25 +201,18 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   }),
 }));
 
-
-
-
-
-
 ///////////////////////
 // SUPPLIERS
 ///////////////////////
 export const suppliers = pgTable("suppliers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
-  tin_number: varchar("tin_number", { length: 20 }).notNull(),
+  tin_number: varchar("tin_number", { length: 20 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 100 }),
   address: text("address"),
   country: varchar("country", { length: 50 }),
-  createdBy: text("created_by")
-    .references(() => user.id)
-    .notNull(),
+  createdBy: text("created_by").references(() => user.id),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -274,7 +220,6 @@ export const suppliers = pgTable("suppliers", {
     .defaultNow()
     .notNull(),
 });
-
 
 export const suppliersRelations = relations(suppliers, ({ one }) => ({
   createdByUser: one(user, {
@@ -283,27 +228,18 @@ export const suppliersRelations = relations(suppliers, ({ one }) => ({
   }),
 }));
 
-
-
-
-
-
-
-
 ///////////////////////
 // CUSTOMERS
 ///////////////////////
 export const customers = pgTable("customers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
-  tin: varchar("tin", { length: 20 }),
+  tin_number: varchar("tin_number", { length: 20 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 100 }),
   address: text("address"),
   country: varchar("country", { length: 50 }),
-  createdBy: text("created_by")
-    .references(() => user.id)
-    .notNull(),
+  createdBy: text("created_by").references(() => user.id),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -312,14 +248,9 @@ export const customers = pgTable("customers", {
     .notNull(),
 });
 
-
 export const customersRelations = relations(customers, ({ one }) => ({
   createdByUser: one(user, {
     fields: [customers.createdBy],
     references: [user.id],
   }),
 }));
-
-
-
-
