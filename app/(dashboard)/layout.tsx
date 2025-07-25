@@ -33,7 +33,7 @@ export default async function Layout({
       <main className="flex flex-col gap-4 w-full h-screen">
         <Header />
         <div
-          className="px-8 flex flex-col gap-4 w-full"
+          className="px-4 flex flex-col gap-4 w-full"
         >{children}</div>
         
       </main>

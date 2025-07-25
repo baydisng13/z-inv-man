@@ -9,7 +9,8 @@
     "lint": "next lint",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth-kit/seed": "^1.0.12",
