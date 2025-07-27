@@ -1,4 +1,4 @@
-import { ArrowUpDown, BarChart3, Home, Package, Settings, Shield, ShoppingCart, TrendingUp, Truck, Users } from "lucide-react" // Removed Calendar, Inbox, Search
+import { ArrowUpDown, BarChart3, Home, Package, Settings, Shield, ShoppingCart, TrendingUp, Truck, Users, FolderArchive } from "lucide-react" 
 
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import {
 const items = [
   { name: "Dashboard", href: "/app/", icon: Home },
   { name: "Products", href: "/app/products", icon: Package },
+  { name: "Categories", href: "/app/categories", icon: FolderArchive },
   { name: "Inventory", href: "/app/inventory", icon: BarChart3 },
   { name: "Purchases", href: "/app/purchases", icon: ShoppingCart },
   { name: "Sales", href: "/app/sales", icon: TrendingUp },

@@ -13,6 +13,7 @@ import {
   ProductType,
   ProductCreateType,
   ProductUpdateType,
+  ProductWithCategoryType,
 } from "@/schemas/product-schema";
 import { axiosInstance } from "@/lib/axios";
 import { buildQueryParams } from "@/lib/buildQueryParams";
@@ -20,7 +21,7 @@ import { buildQueryParams } from "@/lib/buildQueryParams";
 // API Functions
 export async function getProductsFn(params?: { page?: number; search?: string }) {
   const queryParams = buildQueryParams(params);
-  return (await axiosInstance.get<ProductType[]>(`/api/products${queryParams}`)).data;
+  return (await axiosInstance.get<ProductWithCategoryType[]>(`/api/products${queryParams}`)).data;
 }
 
 export async function getProductByIdFn(id: string) {
@@ -51,9 +52,9 @@ export const Product = {
   GetAll: {
     useQuery: (
       params?: { page?: number; search?: string },
-      options?: UseQueryOptions<ProductType[], AxiosError<ErrorRes>>
+      options?: UseQueryOptions<ProductWithCategoryType[], AxiosError<ErrorRes>>
     ) => {
-      return useQuery<ProductType[], AxiosError<ErrorRes>>({
+      return useQuery<ProductWithCategoryType[], AxiosError<ErrorRes>>({
         queryKey: ["Products", params],
         queryFn: () => getProductsFn(params),
         ...options,

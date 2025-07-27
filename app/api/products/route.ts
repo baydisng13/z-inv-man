@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
 import { products, inventoryStock } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { eq, and, or, like, asc, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { db } from "@/db";
 
 const productSchema = z.object({
   name: z.string().min(1),
@@ -14,29 +14,44 @@ const productSchema = z.object({
   sellingPrice: z.number().positive(),
 });
 
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const isArchivedParam = searchParams.get("isArchived");
 
-  // By default, show non-archived products
-  const showArchived = isArchivedParam === "true";
+  const showArchived = searchParams.get("isArchived") === "true";
 
-  let query = await db.select().from(products);
+  const sortBy = searchParams.get("sortBy");
+  const sortField = sortBy === "price" ? "price" : "name";
 
-  if (!showArchived) {
-    query = query.filter((q) => q.isArchived === false);
+  try {
+    const allProducts = await db.query.products.findMany({
+      ...(showArchived ? {} : { where: eq(products.isArchived, false) }),
+      with: {
+        createdByUser: true,
+        category: true,
+        inventory: true
+      },
+      orderBy: (table) => {
+        return sortField === "price"
+          ? desc(table.sellingPrice)
+          : asc(table.name);
+      },
+    });
+
+    return NextResponse.json(allProducts);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch products." },
+      { status: 500 }
+    );
   }
-
-  const allProducts = await query;
-  return NextResponse.json(allProducts);
 }
-
 export async function POST(req: NextRequest) {
-
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
-  })
-  
+    headers: await headers(), // you need to pass the headers object.
+  });
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -58,14 +73,18 @@ export async function POST(req: NextRequest) {
       description,
       unit,
       sellingPrice: sellingPrice.toString(),
+      categoryId: body.categoryId,
       createdBy: session.user.id,
     })
     .returning();
 
-  const newInventory = await db.insert(inventoryStock).values({
-    productId: newProduct[0].id,
-    quantity: 0,
-  }).returning();
+  const newInventory = await db
+    .insert(inventoryStock)
+    .values({
+      productId: newProduct[0].id,
+      quantity: 0,
+    })
+    .returning();
   console.log("New Inventory Record:", newInventory);
 
   return NextResponse.json(newProduct[0]);

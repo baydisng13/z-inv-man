@@ -33,10 +33,12 @@ import {
 } from "@/schemas/product-schema";
 import ImprovedBarcodeField from "@/components/improved-barcode-field";
 import api from "@/apis";
+import { SimpleSelect } from "@/components/SimpleSelect";
 
 export default function NewProductPage() {
   const router = useRouter();
   const [createAnother, setCreateAnother] = useState(false);
+  const { data: categories, isLoading: isLoadingCategories } = api.Category.GetAll.useQuery();
 
   const form = useForm<ProductCreateType>({
     resolver: zodResolver(ProductCreateSchema),
@@ -45,6 +47,7 @@ export default function NewProductPage() {
       name: "",
       description: "",
       sellingPrice: 0,
+      categoryId: "",
     },
   });
 
@@ -63,12 +66,13 @@ export default function NewProductPage() {
           description: "",
           unit: undefined,
           sellingPrice: 0,
+          categoryId: "",
         });
       } else {
         router.push("/app/products");
       }
     }
-  }, [isSuccess]);
+  }, [isSuccess, createAnother, form, router]);
 
   async function onSubmit(data: ProductCreateType) {
     createProduct(data);
@@ -189,6 +193,28 @@ export default function NewProductPage() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <SimpleSelect
+                        name="categoryId"
+                        placeholder="Select a category"
+                        isLoading={isLoadingCategories}
+                        options={categories?.map((category) => ({
+                          label: category.name,
+                          value: category.id,
+                        })) || []}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex items-center space-x-2">
                 <Switch

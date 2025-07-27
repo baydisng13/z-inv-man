@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { CategoryType } from "./category-schema";
+import { InventoryStockType } from "./inventory-schema";
 
 // Schema for a single product, used for validation and type inference
 export const ProductSchema = z.object({
@@ -12,6 +14,8 @@ export const ProductSchema = z.object({
   createdAt: z.string(), // Comes as string from DB
   updatedAt: z.string(), // Comes as string from DB
   isArchived: z.boolean(),
+  categoryId: z.number(),
+
 });
 
 // Schema for creating a new product
@@ -20,6 +24,7 @@ export const ProductCreateSchema = ProductSchema.pick({
   barcode: true,
   description: true,
   unit: true,
+  categoryId: true,
 }).extend({
   sellingPrice: z.coerce.number().positive("Price must be a positive number"),
 });
@@ -31,5 +36,9 @@ export const ProductUpdateSchema = ProductCreateSchema.partial().extend({
 
 // Type definitions inferred from schemas
 export type ProductType = z.infer<typeof ProductSchema>;
+export interface ProductWithCategoryType extends ProductType {
+  category: CategoryType
+  inventory: InventoryStockType
+}
 export type ProductCreateType = z.infer<typeof ProductCreateSchema>;
 export type ProductUpdateType = z.infer<typeof ProductUpdateSchema>;

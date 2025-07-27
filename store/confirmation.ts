@@ -46,7 +46,7 @@ const useConfirmationStore = create<ConfirmationState & confirmationActions>(
 
     CloseConfirmation: () =>
       set((state) => ({
-        open: !state.open,
+        open: false,
         title: null,
         description: null,
         cancelLabel: null,

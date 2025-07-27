@@ -1,0 +1,2 @@
+ALTER TABLE "sales" ALTER COLUMN "customer_id" SET NOT NULL;--> statement-breakpoint
+ALTER TABLE "sales" ADD CONSTRAINT "sales_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id") ON DELETE no action ON UPDATE no action;

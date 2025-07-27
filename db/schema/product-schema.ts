@@ -8,6 +8,7 @@ import {
   text,
   primaryKey,
   boolean,
+  serial,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 import { relations } from "drizzle-orm";
@@ -32,6 +33,7 @@ export const products = pgTable("products", {
     .defaultNow()
     .notNull(),
   isArchived: boolean("is_archived").default(false).notNull(),
+  categoryId: integer("category_id").references(() => categories.id).notNull(),
 });
 
 export const productRelations = relations(products, ({ one }) => ({
@@ -39,7 +41,35 @@ export const productRelations = relations(products, ({ one }) => ({
     fields: [products.createdBy],
     references: [user.id],
   }),
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  inventory: one(inventoryStock, {
+    fields: [products.id],
+    references: [inventoryStock.productId], // FIXED
+  }),
 }));
+
+
+
+
+///////////////////////
+// CATEGORIES
+///////////////////////
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
+
+
+
+
 
 ///////////////////////
 // INVENTORY STOCK (cache)
@@ -148,13 +178,15 @@ export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
 ///////////////////////
 export const sales = pgTable("sales", {
   id: uuid("id").primaryKey().defaultRandom(),
-  customerId: uuid("customer_id"),
+  customerId: uuid("customer_id").references(() => customers.id).notNull(),
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
   discount: decimal("discount", { precision: 12, scale: 2 }).notNull(),
   totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }).notNull(),
   paymentStatus: varchar("payment_status", { length: 20 }).notNull(), // PAID, PARTIAL, CREDIT
   status: varchar("status", { length: 20 }).notNull(), // DRAFT, RECEIVED, CANCELLED
+  taxAmount: decimal("tax_amount", { precision: 12, scale: 2 }).notNull(),
+  includeTax: boolean("include_tax").default(false).notNull(),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),

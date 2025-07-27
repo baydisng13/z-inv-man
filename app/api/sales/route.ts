@@ -5,22 +5,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
+import { salesFormSchema } from "@/schemas/sales-schema";
 
-const saleSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  subtotal: z.number().positive(),
-  discount: z.number().min(0).optional().default(0),
-  totalAmount: z.number().positive(),
-  paidAmount: z.number().positive(),
-  paymentStatus: z.enum(["PAID", "PARTIAL", "CREDIT"]),
-  status: z.enum(["DRAFT", "COMPLETED", "CANCELLED"]),
-  items: z.array(z.object({
-    productId: z.string().uuid(),
-    quantity: z.number().int().positive(),
-    unitPrice: z.number().positive(),
-    total: z.number().positive(),
-  })).min(1),
-});
+
 
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({
@@ -45,30 +32,43 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const validation = saleSchema.safeParse(body);
+  const validation = salesFormSchema.safeParse(body);
 
   if (!validation.success) {
     return NextResponse.json(validation.error.errors, { status: 400 });
   }
 
-  const { items, ...saleData } = validation.data;
+  const { saleItems : saleItemsData, ...saleData } = validation.data;
 
-  const newSale = await db
-    .insert(sales)
-    .values({
-      ...saleData,
-      createdBy: session.user.id,
-    })
-    .returning();
+  const newSale = await db.transaction(async (tx) => {
+    const [insertedSale] = await tx
+      .insert(sales)
+      .values({
+        customerId: saleData.customerId,
+        subtotal: saleData.subtotal,
+        discount: saleData.discount,
+        totalAmount: saleData.totalAmount,
+        paidAmount: saleData.paidAmount,
+        paymentStatus: saleData.paymentStatus,
+        status: saleData.status,
+        createdBy: session.user.id,
+        createdAt: new Date(),
+        taxAmount: saleData.taxAmount,
+        includeTax: saleData.includeTax,
+      })
+      .returning();
 
-  const saleId = newSale[0].id;
+    const saleId = insertedSale.id;
 
-  const newSaleItems = items.map((item) => ({
-    ...item,
-    saleId,
-  }));
+    const newSaleItems = saleItemsData.map((item) => ({
+      ...item,
+      saleId,
+    }));
 
-  await db.insert(saleItems).values(newSaleItems);
+    await tx.insert(saleItems).values(newSaleItems);
+
+    return insertedSale;
+  });
 
   return NextResponse.json(newSale[0]);
 }
