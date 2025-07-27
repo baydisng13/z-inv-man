@@ -178,7 +178,7 @@ export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
 ///////////////////////
 export const sales = pgTable("sales", {
   id: uuid("id").primaryKey().defaultRandom(),
-  customerId: uuid("customer_id").references(() => customers.id).notNull(),
+  customerId: uuid("customer_id").references(() => customers.id).notNull(), // <-- This is correct
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
   discount: decimal("discount", { precision: 12, scale: 2 }).notNull(),
   totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
