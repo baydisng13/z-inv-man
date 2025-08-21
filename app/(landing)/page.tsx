@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Feather, DollarSign, Zap, Shield, BarChart, Users, ShoppingCart, ArrowRight } from "lucide-react";
+import { CheckCircle, Feather, DollarSign, Zap, Shield, BarChart, Users, ShoppingCart, ArrowRight, ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { JSX, SVGProps, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,11 +38,13 @@ function Header() {
   const [hoveredLink, setHoveredLink] = useState<number | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    if (typeof window !== 'undefined') {
+      const handleScroll = () => {
+        setIsScrolled(window.scrollY > 50);
+      };
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
 
   return (
@@ -96,15 +98,17 @@ function HeroSection() {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMousePosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-    };
+    if (typeof window !== 'undefined') {
+      const handleMouseMove = (event: MouseEvent) => {
+        setMousePosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+      };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
   }, []);
 
   const normalizedMouseX = (mousePosition.x / window.innerWidth) * 2 - 1; // -1 to 1
@@ -129,8 +133,8 @@ function HeroSection() {
       {/* Liquid Animation Elements */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ filter: "url(#goo)" }}>
         <motion.div
-          className="w-64 h-64 rounded-full bg-secondary/70 absolute blur-xl"
-          animate={{ x: blob1X, y: blob1Y, scale: 1.4 }}
+          className="w-64 h-64 rounded-full bg-secondary/60 absolute blur-xl"
+          animate={{ x: blob1X, y: blob1Y, scale: 1.6 }}
           transition={{ type: "spring", stiffness: 50, damping: 20, repeat: Infinity, repeatType: "reverse" }}
         />
         <motion.div
@@ -167,18 +171,18 @@ function HeroSection() {
             Stop Losing Money <br /> to Bad Inventory
           </motion.h1>
           <motion.p 
-            className="max-w-2xl mx-auto text-lg md:text-xl text-white/60 mt-4"
+            className="max-w-md mx-auto text-lg md:text-xl text-white/60 mt-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            A simple, powerful system to track products, stock, sales, and purchases—all in one place.
+            A simple, powerful system to track products, stock, sales, and purchases all in one place.
           </motion.p>
           <div className="flex gap-4 justify-center mt-8">
-            <Button size="lg" asChild className="bg-white text-black hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-3">
+            <Button size="lg" asChild className="bg-white text-black hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-6">
               <Link href="/sign-up">Get Started Free</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-3">
+            <Button size="lg" variant="outline" asChild className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-6">
               <Link href="#features">Learn More</Link>
             </Button>
           </div>
@@ -189,52 +193,71 @@ function HeroSection() {
 }
 
 function FeaturesSection() {
+  const features = [
+    {
+      title: "Real-Time Inventory",
+      description: "Always up-to-date stock levels at a glance. Know exactly what you have, where it is, and when you need to reorder.",
+      icon: <CheckCircle className="h-10 w-10 text-primary" />,
+    },
+    {
+      title: "Smarter Sales & Purchases",
+      description: "Drafts, partial payments, and credits made simple. Streamline your transactions from start to finish.",
+      icon: <ShoppingCart className="h-10 w-10 text-primary" />,
+    },
+    {
+      title: "Complete Audit Trail",
+      description: "Track every movement: In, Out, Transfer, or Adjustment. Maintain full transparency and accountability.",
+      icon: <BarChart className="h-10 w-10 text-primary" />,
+    },
+    {
+      title: "Organized Products",
+      description: "Categories, units, and prices all neatly managed. Keep your product catalog clean and easy to navigate.",
+      icon: <Feather className="h-10 w-10 text-primary" />,
+    },
+    {
+      title: "Barcode Scanning",
+      description: "Lightning-fast checkout and POS accuracy. Reduce errors and speed up operations with integrated barcode support.",
+      icon: <Zap className="h-10 w-10 text-primary" />,
+    },
+    {
+      title: "E-Trade Compliance",
+      description: "TIN verification built right in. Ensure your business stays compliant with local regulations.",
+      icon: <Shield className="h-10 w-10 text-primary" />,
+    },
+  ];
+
   return (
-    <section id="features" className="py-20 md:py-32 bg-black">
-      <div className="container px-4 md:px-6">
+    <section id="features" className="py-20 md:py-32 bg-black relative overflow-hidden w-full flex items-center justify-center">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      <div className="container px-4 md:px-6 relative z-10">
         <div className="text-center space-y-4 mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Features</h2>
-          <p className="max-w-2xl mx-auto text-lg text-white/60">Everything you need to manage your inventory.</p>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Key Features</h2>
+          <p className="max-w-2xl mx-auto text-lg text-white/60">Discover how our system empowers your business.</p>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {[{
-            title: "Real-Time Inventory",
-            description: "Always up-to-date stock levels at a glance.",
-            icon: <CheckCircle className="h-8 w-8 text-primary" />
-          }, {
-            title: "Smarter Sales & Purchases",
-            description: "Drafts, partial payments, and credits made simple.",
-            icon: <ShoppingCart className="h-8 w-8 text-primary" />
-          }, {
-            title: "Complete Audit Trail",
-            description: "Track every movement: In, Out, Transfer, or Adjustment.",
-            icon: <BarChart className="h-8 w-8 text-primary" />
-          }, {
-            title: "Organized Products",
-            description: "Categories, units, and prices all neatly managed.",
-            icon: <Feather className="h-8 w-8 text-primary" />
-          }, {
-            title: "Barcode Scanning",
-            description: "Lightning-fast checkout and POS accuracy.",
-            icon: <Zap className="h-8 w-8 text-primary" />
-          }, {
-            title: "E-Trade Compliance",
-            description: "TIN verification built right in.",
-            icon: <Shield className="h-8 w-8 text-primary" />
-          }].map((feature, i) => (
-            <motion.div 
-              key={i} 
-              className="p-6 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, i) => (
+            <motion.div
+              key={i}
+              className="relative p-6 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-lg overflow-hidden group"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
+              whileHover={{ y: -10, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
             >
-              <div className="flex items-center gap-4 mb-4">
-                {feature.icon}
-                <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <motion.div 
+                  className="mb-4 p-4 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors duration-300"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  {feature.icon}
+                </motion.div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-white/70 text-base">{feature.description}</p>
               </div>
-              <p className="text-white/70">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -243,9 +266,32 @@ function FeaturesSection() {
   );
 }
 
+interface ArrowLeftIconProps extends SVGProps<SVGSVGElement> {}
+
+function ArrowLeftIcon(props: ArrowLeftIconProps) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 19-7-7 7-7" />
+      <path d="M19 12H5" />
+    </svg>
+  )
+}
+
+
 function PricingSection() {
   return (
-    <section id="pricing" className="py-20 md:py-32 bg-black">
+    <section id="pricing" className="py-20 md:py-32 bg-black w-full flex items-center justify-center">
       <div className="container px-4 md:px-6">
         <div className="text-center space-y-4 mb-12">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Pricing Plans</h2>
@@ -357,7 +403,7 @@ function PricingSection() {
 
 function Footer() {
   return (
-    <footer className="py-6 border-t border-white/10 bg-black">
+    <footer className="py-6 border-t border-white/10 bg-black/50 backdrop-blur-sm">
       <div className="container px-4 md:px-6 flex items-center justify-between text-sm text-white/60">
         <p>&copy; 2025 Inventory Inc. All rights reserved.</p>
         <div className="flex items-center gap-4">
@@ -377,11 +423,9 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Header />
-      <main className="flex-1">
         <HeroSection />
         <FeaturesSection />
         <PricingSection />
-      </main>
       <Footer />
     </div>
   );
