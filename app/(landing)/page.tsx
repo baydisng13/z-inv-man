@@ -50,11 +50,11 @@ function Header() {
   return (
     <motion.header 
       layout
-      className={`fixed top-0 left-0 right-0 z-50 ${isScrolled ? "p-4" : "pt-6"}`}>
+      className={`fixed top-0 left-0 right-0 z-50 ${isScrolled ? "p-4" : "pt-6"} transition-all duration-1000`}>
       <div className={`container mx-auto flex items-center ${isScrolled ? "justify-between" : "justify-center"}`}>
         <motion.div layout className="flex items-center gap-2">
-          <MountainIcon className={`transition-all duration-500 ${isScrolled ? "h-8 w-8" : "h-10 w-10"}`} />
-          <span className={`font-semibold transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>Inventory</span>
+          {/* <MountainIcon className={`transition-all duration-500 ${isScrolled ? "h-8 w-8" : "h-10 w-10"}`} /> */}
+          <span className={`font-semibold transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>Z-Inventory</span>
         </motion.div>
         <motion.div 
           layout
@@ -95,24 +95,29 @@ function Header() {
 }
 
 function HeroSection() {
-  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const handleMouseMove = (event: MouseEvent) => {
-        setMousePosition({
-          x: event.clientX,
-          y: event.clientY,
-        });
-      };
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
 
+    if (typeof window !== 'undefined') {
+      setMousePosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); // Initial center position
       window.addEventListener("mousemove", handleMouseMove);
-      return () => window.removeEventListener("mousemove", handleMouseMove);
     }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener("mousemove", handleMouseMove);
+      }
+    };
   }, []);
 
-  const normalizedMouseX = (mousePosition.x / window.innerWidth) * 2 - 1; // -1 to 1
-  const normalizedMouseY = (mousePosition.y / window.innerHeight) * 2 - 1; // -1 to 1
+  const normalizedMouseX = mousePosition ? (mousePosition.x / window.innerWidth) * 2 - 1 : 0; // -1 to 1
+  const normalizedMouseY = mousePosition ? (mousePosition.y / window.innerHeight) * 2 - 1 : 0; // -1 to 1
 
   const blob1X = normalizedMouseX * 100; // Adjust sensitivity
   const blob1Y = normalizedMouseY * 100; // Adjust sensitivity
@@ -131,18 +136,20 @@ function HeroSection() {
       />
 
       {/* Liquid Animation Elements */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ filter: "url(#goo)" }}>
-        <motion.div
-          className="w-64 h-64 rounded-full bg-secondary/60 absolute blur-xl"
-          animate={{ x: blob1X, y: blob1Y, scale: 1.6 }}
-          transition={{ type: "spring", stiffness: 50, damping: 20, repeat: Infinity, repeatType: "reverse" }}
-        />
-        <motion.div
-          className="w-64 h-64 rounded-full bg-primary/40 absolute blur-xl"
-          animate={{ x: blob2X, y: blob2Y, scale: 0.6 }}
-          transition={{ type: "spring", stiffness: 50, damping: 20, delay: 0.1, repeat: Infinity, repeatType: "reverse" }}
-        />
-      </div>
+      {mousePosition && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ filter: "url(#goo)" }}>
+          <motion.div
+            className="w-64 h-64 rounded-full bg-secondary/70 absolute blur-xl"
+            animate={{ x: blob1X, y: blob1Y, scale: 1.4 }}
+            transition={{ type: "spring", stiffness: 50, damping: 20, repeat: Infinity, repeatType: "reverse" }}
+          />
+          <motion.div
+            className="w-64 h-64 rounded-full bg-primary/40 absolute blur-xl"
+            animate={{ x: blob2X, y: blob2Y, scale: 0.6 }}
+            transition={{ type: "spring", stiffness: 50, damping: 20, delay: 0.1, repeat: Infinity, repeatType: "reverse" }}
+          />
+        </div>
+      )}
 
       {/* SVG Filter for Goo Effect */}
       <svg className="absolute w-0 h-0">
@@ -171,18 +178,18 @@ function HeroSection() {
             Stop Losing Money <br /> to Bad Inventory
           </motion.h1>
           <motion.p 
-            className="max-w-md mx-auto text-lg md:text-xl text-white/60 mt-4"
+            className="max-w-2xl mx-auto text-lg md:text-xl text-white/60 mt-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            A simple, powerful system to track products, stock, sales, and purchases all in one place.
+            A simple, powerful system to track products, stock, sales, and purchases—all in one place.
           </motion.p>
           <div className="flex gap-4 justify-center mt-8">
-            <Button size="lg" asChild className="bg-white text-black hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-6">
+            <Button size="lg" asChild className="bg-white text-black hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-3">
               <Link href="/sign-up">Get Started Free</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-6">
+            <Button size="lg" variant="outline" asChild className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 transform hover:scale-105 rounded-full px-8 py-3">
               <Link href="#features">Learn More</Link>
             </Button>
           </div>
