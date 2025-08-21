@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { sales, saleItems } from "@/db/schema/product-schema";
+import { sales, saleItems, customers } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -16,7 +16,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const allSales = await db.select().from(sales);
+  const allSales = await db.query.sales.findMany({
+    with: {
+      customer: true,
+      saleItems: true,
+    },
+  });
+
   return NextResponse.json(allSales);
 }
 
@@ -36,62 +42,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(validation.error.errors, { status: 400 });
   }
 
-  // Destructure saleItemsData and the rest of saleData
   const { saleItems: saleItemsData, ...saleData } = validation.data;
 
   try {
     const newSale = await db.transaction(async (tx) => {
-      // Insert the main sale record
-      // Ensure saleData properties match the sales schema and types (especially customerId)
       const [insertedSale] = await tx
         .insert(sales)
         .values({
-          // Make sure saleData.customerId is indeed a string (UUID)
-          // Drizzle usually handles string for uuid correctly
           customerId: saleData.customerId,
-          subtotal: saleData.subtotal.toString(), // Convert decimals to string for Drizzle
-          discount: saleData.discount.toString(), // Convert decimals to string for Drizzle
-          totalAmount: saleData.totalAmount.toString(), // Convert decimals to string for Drizzle
-          paidAmount: saleData.paidAmount.toString(), // Convert decimals to string for Drizzle
+          subtotal: saleData.subtotal.toString(),
+          discount: saleData.discount.toString(),
+          totalAmount: saleData.totalAmount.toString(),
+          paidAmount: saleData.paidAmount.toString(),
           paymentStatus: saleData.paymentStatus,
           status: saleData.status,
           createdBy: session.user.id,
-          createdAt: new Date(), // Drizzle's defaultNow() handles this if omitted, but explicit is fine
-          taxAmount: saleData.taxAmount.toString(), // Convert decimals to string for Drizzle
+          createdAt: new Date(), 
+          taxAmount: saleData.taxAmount.toString(),
           includeTax: saleData.includeTax,
-          // updatedAt: new Date(), // If you want to explicitly set updatedAt now, though Drizzle's defaultNow() will handle it
         })
         .returning();
 
       const saleId = insertedSale.id;
 
-      // Prepare sale items for insertion
       const newSaleItems = saleItemsData.map((item) => ({
         saleId,
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice.toString(), // Convert to string for decimal column
-        total: item.total.toString(), // Convert to string for decimal column
-        // IMPORTANT: Only include properties that exist in your `saleItems` Drizzle schema.
-        // Remove `productCode` and `productName` if they are not in the database table.
-        // For example, if your form data also contains `productCode` and `productName`,
-        // you would explicitly pick the fields needed for the DB:
-        // productId: item.productId,
-        // quantity: item.quantity,
-        // unitPrice: item.unitPrice.toString(),
-        // total: item.total.toString(),
+        unitPrice: item.unitPrice.toString(), 
+        total: item.total.toString(), 
       }));
 
-      // Insert all sale items in a batch
       await tx.insert(saleItems).values(newSaleItems);
 
-      return insertedSale; // Return the single inserted sale object
+      return insertedSale; 
     });
 
-    return NextResponse.json(newSale, { status: 201 }); // Return the object directly
+    return NextResponse.json(newSale, { status: 201 }); 
   } catch (error) {
     console.error("Error creating sale:", error);
-    // You might want more granular error handling here
     return NextResponse.json(
       { message: "Failed to create sale", error: error },
       { status: 500 }

@@ -59,7 +59,7 @@ export const salesSchema = salesFormSchema.pick({
 
 export type SalesCreateType = z.infer<typeof salesFormSchema>
 export type SalesUpdateType = z.infer<typeof salesFormSchema>
-export type SalesType = z.infer<typeof salesSchema> 
+export type SalesType = z.infer<typeof salesSchema> & { customerName?: string } 
 
 
 

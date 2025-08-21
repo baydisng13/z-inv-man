@@ -19,6 +19,10 @@ export async function getSalesFn(params?: { page?: number; search?: string }) {
   return (await axiosInstance.get<SalesType[]>(`/api/sales${queryParams}`)).data;
 }
 
+export async function getAllSales() {
+  return (await axiosInstance.get<SalesType[]>(`/api/sales`)).data;
+}
+
 export async function getSalesByIdFn(id: string) {
   return (await axiosInstance.get<SalesType>(`/api/sales/${id}`)).data;
 }
