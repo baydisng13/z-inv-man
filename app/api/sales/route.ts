@@ -4,7 +4,7 @@ import { sales, saleItems, customers } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { salesFormSchema } from "@/schemas/sales-schema";
 
 export async function GET(req: NextRequest) {
@@ -16,14 +16,31 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const allSales = await db.query.sales.findMany({
-    with: {
-      customer: true,
-      saleItems: true,
-    },
-  });
+  try {
+    const allSales = await db.select({
+      id: sales.id,
+      customerId: sales.customerId,
+      subtotal: sql<number>`CAST(${sales.subtotal} AS NUMERIC)`,
+      discount: sql<number>`CAST(${sales.discount} AS NUMERIC)`,
+      totalAmount: sql<number>`CAST(${sales.totalAmount} AS NUMERIC)`,
+      paidAmount: sql<number>`CAST(${sales.paidAmount} AS NUMERIC)`,
+      paymentStatus: sales.paymentStatus,
+      status: sales.status,
+      taxAmount: sql<number>`CAST(${sales.taxAmount} AS NUMERIC)`,
+      includeTax: sales.includeTax,
+      createdBy: sales.createdBy,
+      createdAt: sales.createdAt,
+      updatedAt: sales.updatedAt,
+      customerName: customers.name, // Select customer name directly
+    })
+    .from(sales)
+    .leftJoin(customers, eq(sales.customerId, customers.id)); // Join with customers table
 
-  return NextResponse.json(allSales);
+    return NextResponse.json(allSales);
+  } catch (error) {
+    console.error("Error fetching sales:", error);
+    return NextResponse.json({ message: "Error fetching sales", error: error }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {

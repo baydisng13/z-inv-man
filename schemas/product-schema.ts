@@ -14,7 +14,7 @@ export const ProductSchema = z.object({
   createdAt: z.string(), // Comes as string from DB
   updatedAt: z.string(), // Comes as string from DB
   isArchived: z.boolean(),
-  categoryId: z.number(),
+  categoryId: z.string(),
 
 });
 

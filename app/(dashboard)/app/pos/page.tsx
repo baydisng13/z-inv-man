@@ -184,7 +184,7 @@ export default function POSPage() {
   const filteredProducts = isProductSuccess
     ? products.filter((product) => {
         const matchesCategory =
-          watchedValues.selectedCategory === "All" || product.categoryId === Number(watchedValues.selectedCategory)
+          watchedValues.selectedCategory === "All" || product.categoryId === watchedValues.selectedCategory
         const matchesSearch =
           product.barcode.toLowerCase().includes(watchedValues.productSearch.toLowerCase()) ||
           product.name.toLowerCase().includes(watchedValues.productSearch.toLowerCase())

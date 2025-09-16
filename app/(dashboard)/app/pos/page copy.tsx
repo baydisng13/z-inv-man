@@ -247,7 +247,7 @@ export default function POSPage() {
     ? product.filter((product) => {
         const matchesCategory =
           selectedCategory === "All" ||
-          product.categoryId === Number(selectedCategory);
+          product.categoryId === selectedCategory;
         const matchesSearch =
           product.barcode.toLowerCase().includes(productSearch.toLowerCase()) ||
           product.name.toLowerCase().includes(productSearch.toLowerCase());

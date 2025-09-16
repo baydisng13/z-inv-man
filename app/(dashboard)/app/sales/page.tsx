@@ -1,99 +1,68 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Filter } from "lucide-react"
 
-// Mock data
-const sales = [
-  {
-    id: 1,
-    customer: "John Smith",
-    subtotal: 2500.0,
-    discount: 100.0,
-    total: 2400.0,
-    paidAmount: 2400.0,
-    paymentStatus: "PAID",
-    status: "RECEIVED",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    customer: "Sarah Johnson",
-    subtotal: 1800.0,
-    discount: 0.0,
-    total: 1800.0,
-    paidAmount: 900.0,
-    paymentStatus: "PARTIAL",
-    status: "RECEIVED",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: 3,
-    customer: "Mike Wilson",
-    subtotal: 3200.0,
-    discount: 200.0,
-    total: 3000.0,
-    paidAmount: 0.0,
-    paymentStatus: "CREDIT",
-    status: "DRAFT",
-    createdAt: "2024-01-13",
-  },
-  {
-    id: 4,
-    customer: "Emily Davis",
-    subtotal: 750.0,
-    discount: 50.0,
-    total: 700.0,
-    paidAmount: 700.0,
-    paymentStatus: "PAID",
-    status: "CANCELLED",
-    createdAt: "2024-01-12",
-  },
-]
+import api from "@/apis";
+import CustomerTableSkeleton from "@/components/customer-table-skeleton";
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Filter } from "lucide-react";
 
 export default function SalesPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredSales = sales.filter((sale) => {
-    const matchesSearch = sale.customer.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesPaymentStatus = paymentStatusFilter === "all" || sale.paymentStatus === paymentStatusFilter
-    const matchesStatus = statusFilter === "all" || sale.status === statusFilter
-    return matchesSearch && matchesPaymentStatus && matchesStatus
-  })
+  const {
+    data: sales,
+    isLoading,
+    isError,
+    error,
+  } = api.Sales.GetAll.useQuery();
+
+  const filteredSales = sales
+    ? sales.filter((sale) => {
+        const matchesSearch =
+          sale.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesPaymentStatus =
+          paymentStatusFilter === "all" || sale.paymentStatus === paymentStatusFilter;
+        const matchesStatus = statusFilter === "all" || sale.status === statusFilter;
+        return matchesSearch && matchesPaymentStatus && matchesStatus;
+      })
+    : [];
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
       case "PAID":
-        return <Badge variant="default">Paid</Badge>
+        return <Badge variant="default">Paid</Badge>;
       case "PARTIAL":
-        return <Badge variant="secondary">Partial</Badge>
+        return <Badge variant="secondary">Partial</Badge>;
       case "CREDIT":
-        return <Badge variant="outline">Credit</Badge>
+        return <Badge variant="outline">Credit</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "RECEIVED":
-        return <Badge variant="default">Completed</Badge>
+        return <Badge variant="default">Completed</Badge>;
       case "DRAFT":
-        return <Badge variant="secondary">Draft</Badge>
+        return <Badge variant="secondary">Draft</Badge>;
       case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>
+        return <Badge variant="destructive">Cancelled</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
+
+  if (isLoading) return <CustomerTableSkeleton />;
+  if (isError) return <div>Error loading sales orders: {error?.message}</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -163,16 +132,16 @@ export default function SalesPage() {
           <TableBody>
             {filteredSales.map((sale) => (
               <TableRow key={sale.id}>
-                <TableCell className="font-medium">{sale.customer}</TableCell>
-                <TableCell>${sale.subtotal.toFixed(2)}</TableCell>
-                <TableCell>${sale.discount.toFixed(2)}</TableCell>
-                <TableCell className="font-medium">${sale.total.toFixed(2)}</TableCell>
-                <TableCell>${sale.paidAmount.toFixed(2)}</TableCell>
+                <TableCell className="font-medium">{sale.customerName}</TableCell>
+                <TableCell>${sale.subtotal}</TableCell>
+                <TableCell>${sale.discount}</TableCell>
+                <TableCell className="font-medium">${sale.totalAmount}</TableCell>
+                <TableCell>${sale.paidAmount}</TableCell>
                 <TableCell>{getPaymentStatusBadge(sale.paymentStatus)}</TableCell>
                 <TableCell>{getStatusBadge(sale.status)}</TableCell>
                 <TableCell>{new Date(sale.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Link href={`/sales/${sale.id}`}>
+                  <Link href={`/app/sales/${sale.id}`}>
                     <Button variant="ghost" size="sm">
                       View
                     </Button>
@@ -186,7 +155,7 @@ export default function SalesPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredSales.length} of {sales.length} sales orders
+          Showing {filteredSales.length} of {sales?.length ?? 0} sales orders
         </p>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" disabled>
@@ -198,5 +167,5 @@ export default function SalesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

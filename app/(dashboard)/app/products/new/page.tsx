@@ -207,7 +207,7 @@ export default function NewProductPage() {
                         isLoading={isLoadingCategories}
                         options={categories?.map((category) => ({
                           label: category.name,
-                          value: category.id,
+                          value: category.id.toString(),
                         })) || []}
                       />
                     </FormControl>

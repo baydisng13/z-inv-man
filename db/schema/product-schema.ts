@@ -33,7 +33,9 @@ export const products = pgTable("products", {
     .defaultNow()
     .notNull(),
   isArchived: boolean("is_archived").default(false).notNull(),
-  categoryId: integer("category_id").references(() => categories.id).notNull(),
+  categoryId: integer("category_id")
+    .references(() => categories.id)
+    .notNull(),
 });
 
 export const productRelations = relations(products, ({ one }) => ({
@@ -51,9 +53,6 @@ export const productRelations = relations(products, ({ one }) => ({
   }),
 }));
 
-
-
-
 ///////////////////////
 // CATEGORIES
 ///////////////////////
@@ -66,10 +65,6 @@ export const categories = pgTable("categories", {
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));
-
-
-
-
 
 ///////////////////////
 // INVENTORY STOCK (cache)
@@ -147,7 +142,7 @@ export const purchasesRelations = relations(purchases, ({ one, many }) => ({
     fields: [purchases.createdBy],
     references: [user.id],
   }),
-  items: many(purchaseItems)
+  items: many(purchaseItems),
 }));
 
 export const purchaseItems = pgTable("purchase_items", {
@@ -178,7 +173,9 @@ export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
 ///////////////////////
 export const sales = pgTable("sales", {
   id: uuid("id").primaryKey().defaultRandom(),
-  customerId: uuid("customer_id").references(() => customers.id).notNull(), // <-- This is correct
+  customerId: uuid("customer_id")
+    .references(() => customers.id)
+    .notNull(), // <-- This is correct
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
   discount: decimal("discount", { precision: 12, scale: 2 }).notNull(),
   totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
@@ -198,7 +195,7 @@ export const sales = pgTable("sales", {
     .notNull(),
 });
 
-export const salesRelations = relations(sales, ({ one }) => ({
+export const salesRelations = relations(sales, ({ one, many }) => ({
   customer: one(customers, {
     fields: [sales.customerId],
     references: [customers.id],
@@ -207,6 +204,7 @@ export const salesRelations = relations(sales, ({ one }) => ({
     fields: [sales.createdBy],
     references: [user.id],
   }),
+  saleItems: many(saleItems),
 }));
 
 export const saleItems = pgTable("sale_items", {

@@ -3,4 +3,3 @@ export type ErrorRes = {
   errors?: { [key: string]: string[] };
 };
 
-export * from "./category";
