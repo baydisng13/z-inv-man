@@ -18,6 +18,7 @@ import api from "@/apis"
 import type { ProductWithCategoryType } from "@/schemas/product-schema"
 import CustomerSelect from "./customerSelect"
 import { SalesCreateType, salesFormSchema } from "@/schemas/sales-schema"
+import { toast } from "sonner"
 
 
 
@@ -229,6 +230,14 @@ export default function POSPage() {
   // Handle form submission
   const onSubmit = (data: SalesCreateType) => {
     console.log("Form submitted:", data)
+    for (let item of data.saleItems) {
+      const product = products?.find((p) => p.id === item.productId);
+      const productStock = product?.inventory?.quantity ?? 0;
+      if (productStock < item.quantity) {
+        toast.error(`Requested quantity for ${product?.name ?? "product"} exceeded stock`);
+        return;
+      }
+    }
     createSalesOrder(data)
   }
 
@@ -431,8 +440,10 @@ export default function POSPage() {
                   <CartPlaceholder />
                 ) : (
                   <div className="p-2 space-y-1">
-                    {saleItems.map((item, index) => (
-                      <div key={item.id} className="border-b border-dashed border-gray-200 pb-1">
+                      {saleItems.map((item, index) => {
+                        const productWithStock = products?.find((product) => product.id == item.productId)
+                        const stockQuantity = productWithStock?.inventory.quantity
+                        return <div key={item.id} className="border-b border-dashed border-gray-200 pb-1">
                         <div className="flex justify-between items-start text-xs font-mono">
                           <div className="flex-1">
                             <div className="font-medium">
@@ -471,6 +482,7 @@ export default function POSPage() {
                             />
                             <Button
                               type="button"
+                                disabled={stockQuantity !== undefined && stockQuantity < item.quantity + 1}
                               variant="outline"
                               size="sm"
                               onClick={() => updateCartItemQuantity(index, item.quantity + 1)}
@@ -487,7 +499,7 @@ export default function POSPage() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      })}
                   </div>
                 )}
               </ScrollArea>
