@@ -210,4 +210,101 @@ test.describe("Sales API", () => {
     expect(updatedSale.paidAmount).toBe("30.00");
     expect(updatedSale.paymentStatus).toBe("PAID");
   });
+
+  test("should fail to create sale with exceeded stock", async ({ request }) => {
+    // Create a product
+
+    //create new category before creating new product
+    const newCategory = {
+      name: "Sale Exceeded Stock Test Category",
+    };
+    const createCategoryRes = await request.post("/api/categories", {
+      data: newCategory,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createCategoryRes.ok()).toBeTruthy();
+    const category = await createCategoryRes.json();
+
+    const newProduct = {
+      name: "Sale Exceeded Stock Test Product",
+      barcode: "SALEEX123",
+      unit: "pcs",
+      sellingPrice: 10.00,
+      categoryId: category.id,
+    };
+    const createProductRes = await request.post("/api/products", {
+      data: newProduct,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createProductRes.ok()).toBeTruthy();
+    const product = await createProductRes.json();
+
+    const createStockRes = await request.post("/api/inventory", {
+      data: {
+        productId: product.id,
+        quantity: 3,
+      },
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createStockRes.ok()).toBeTruthy();
+
+    // Create a customer
+    const newCustomer = {
+      name: "Sale Exceeded Stock Test Customer",
+      email: "saleexceeded@customer.com",
+    };
+    const createCustomerRes = await request.post("/api/customers", {
+      data: newCustomer,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createCustomerRes.ok()).toBeTruthy();
+    const customer = await createCustomerRes.json();
+
+    const newSale = {
+      customerId: customer.id,
+      subtotal: 40.00,
+      discount: 0.00,
+      taxAmount: 0.00,
+      totalAmount: 40.00,
+      paidAmount: 40.00,
+      paymentStatus: "PAID",
+      status: "DRAFT",
+      includeTax: false,
+      selectedCategory: "",
+      productSearch: "",
+      isPaymentOpen: false,
+      quickAdd: {
+        productCode: "",
+        quantity: 1,
+      },
+      saleItems: [
+        {
+          productId: product.id,
+          productCode: product.barcode,
+          productName: product.name,
+          quantity: 4,
+          unitPrice: 10.00,
+          total: 40.00,
+        },
+      ],
+    };
+
+    const createRes = await request.post("/api/sales", {
+      data: newSale,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createRes.ok()).toBeFalsy();
+    const sale = await createRes.json();
+    expect(sale.message).toBe("requested quantity for \"Sale Exceeded Stock Test Product\" exceeds available stock.");
+  });
 });
