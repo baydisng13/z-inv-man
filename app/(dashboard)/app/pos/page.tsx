@@ -20,9 +20,6 @@ import CustomerSelect from "./customerSelect"
 import { SalesCreateType, salesFormSchema } from "@/schemas/sales-schema"
 import { toast } from "sonner"
 
-
-
-
 export default function POSPage() {
   const productInputRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
@@ -111,12 +108,17 @@ export default function POSPage() {
   // Add product to cart
   const addToCart = useCallback(
     (product: ProductWithCategoryType, quantity = 1) => {
+      if (product.inventory?.quantity == 0) return
       const existingItemIndex = cartItems.findIndex((item) => item.productId === product.id)
 
       if (existingItemIndex >= 0) {
         // Update existing item
         const existingItem = cartItems[existingItemIndex]
         const newQuantity = existingItem.quantity + quantity
+        if (newQuantity > product.inventory?.quantity) {
+          toast.error("Not enough stock")
+          return
+        }
         const newTotal = Number(product.sellingPrice) * newQuantity
 
         update(existingItemIndex, {
@@ -163,6 +165,13 @@ export default function POSPage() {
     }
   }, [form, products, addToCart, resetQuickAddAndFocus])
 
+
+  const isProductStockExeceeded = (productId: string, newQuantity: number) => {
+    const product = products?.find((p) => p.id === productId);
+    const productStock = product?.inventory?.quantity ?? 0;
+    if (productStock < newQuantity) return true
+  }
+
   // Update cart item quantity
   const updateCartItemQuantity = useCallback(
     (index: number, newQuantity: number) => {
@@ -170,6 +179,11 @@ export default function POSPage() {
         remove(index)
       } else {
         const item = cartItems[index]
+        if (isProductStockExeceeded(item.productId, newQuantity)) {
+          toast.error('Not Enough Stock')
+          return
+        }
+
         const newTotal = item.unitPrice * newQuantity
         update(index, {
           ...item,
@@ -184,13 +198,13 @@ export default function POSPage() {
   // Filter products
   const filteredProducts = isProductSuccess
     ? products.filter((product) => {
-        const matchesCategory =
-          watchedValues.selectedCategory === "All" || product.categoryId === watchedValues.selectedCategory
-        const matchesSearch =
-          product.barcode.toLowerCase().includes(watchedValues.productSearch.toLowerCase()) ||
-          product.name.toLowerCase().includes(watchedValues.productSearch.toLowerCase())
-        return matchesCategory && matchesSearch
-      })
+      const matchesCategory =
+        watchedValues.selectedCategory === "All" || product.categoryId === watchedValues.selectedCategory
+      const matchesSearch =
+        product.barcode.toLowerCase().includes(watchedValues.productSearch.toLowerCase()) ||
+        product.name.toLowerCase().includes(watchedValues.productSearch.toLowerCase())
+      return matchesCategory && matchesSearch
+    })
     : []
 
   // Handle keyboard shortcuts
@@ -230,7 +244,7 @@ export default function POSPage() {
   // Handle form submission
   const onSubmit = (data: SalesCreateType) => {
     console.log("Form submitted:", data)
-    for (let item of data.saleItems) {
+    for (const item of data.saleItems) {
       const product = products?.find((p) => p.id === item.productId);
       const productStock = product?.inventory?.quantity ?? 0;
       if (productStock < item.quantity) {
@@ -383,7 +397,8 @@ export default function POSPage() {
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
-                    className="cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-100 border hover:border-blue-300"
+                    aria-disabled={product.inventory?.quantity === 0}
+                    className={` border ${product.inventory?.quantity === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
                     onClick={() => addToCart(product)}
                     onDoubleClick={() => addToCart(product, 2)}
                   >
@@ -407,10 +422,10 @@ export default function POSPage() {
                   </Card>
                 ))}
               </div>
-            <pre>
-              {JSON.stringify(form.watch(), null, 2)}
-              {JSON.stringify(form.formState.errors, null, 2)}
-            </pre>
+              <pre>
+                {JSON.stringify(form.watch(), null, 2)}
+                {JSON.stringify(form.formState.errors, null, 2)}
+              </pre>
             </ScrollArea>
 
           </div>
@@ -424,9 +439,9 @@ export default function POSPage() {
 
                 <CustomerSelect
                   name="customerId"
-                /> 
+                />
 
-            
+
               </div>
             </div>
 
@@ -482,7 +497,7 @@ export default function POSPage() {
                             />
                             <Button
                               type="button"
-                                disabled={stockQuantity !== undefined && stockQuantity < item.quantity + 1}
+                              disabled={stockQuantity !== undefined && stockQuantity < item.quantity + 1}
                               variant="outline"
                               size="sm"
                               onClick={() => updateCartItemQuantity(index, item.quantity + 1)}
@@ -499,7 +514,7 @@ export default function POSPage() {
                           </div>
                         </div>
                       </div>
-                      })}
+                    })}
                   </div>
                 )}
               </ScrollArea>
