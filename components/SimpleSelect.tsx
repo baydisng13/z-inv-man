@@ -79,7 +79,7 @@ export const SimpleSelect: React.FC<SimpleSelectProps> = ({
                   )}
                 >
                   {selectedValue
-                    ? options.find((option) => option.value === selectedValue)
+                    ? options.find((option) => String(option.value) === String(selectedValue))
                         ?.label
                     : placeholder}
                   <ChevronsUpDown className="opacity-50" />

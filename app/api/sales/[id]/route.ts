@@ -23,8 +23,9 @@ const saleUpdateSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
   });
@@ -34,7 +35,7 @@ export async function GET(
   }
 
   const sale = await db.query.sales.findMany({
-    where: (sales, { eq }) => eq(sales.id, params.id),
+    where: (sales, { eq }) => eq(sales.id, id),
     with: {
       customer: true, // fetch the related customer
       saleItems: {
@@ -52,14 +53,14 @@ export async function GET(
   const items = await db
     .select()
     .from(saleItems)
-    .where(eq(saleItems.saleId, params.id));
+    .where(eq(saleItems.saleId, (await params).id));
 
   return NextResponse.json({ ...sale[0], saleItems: items });
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -87,7 +88,7 @@ const updatedSale = await db
     taxAmount: "00.00",
     updatedAt: new Date(),
   })
-  .where(eq(sales.id, params.id))
+  .where(eq(sales.id, (await params).id))
   .returning();
 
 
@@ -100,7 +101,7 @@ const updatedSale = await db
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -111,11 +112,11 @@ export async function DELETE(
   }
 
   // Delete sale items first
-  await db.delete(saleItems).where(eq(saleItems.saleId, params.id));
+  await db.delete(saleItems).where(eq(saleItems.saleId, (await params).id));
 
   const deletedSale = await db
     .delete(sales)
-    .where(eq(sales.id, params.id))
+    .where(eq(sales.id, (await params).id))
     .returning();
 
   if (deletedSale.length === 0) {

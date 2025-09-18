@@ -302,7 +302,7 @@ function PricingSection() {
       <div className="container px-4 md:px-6">
         <div className="text-center space-y-4 mb-12">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Pricing Plans</h2>
-          <p className="max-w-2xl mx-auto text-lg text-white/60">Choose the plan that's right for your business.</p>
+          <p className="max-w-2xl mx-auto text-lg text-white/60">Choose the plan that&apos;s right for your business.</p>
         </div>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           <motion.div 

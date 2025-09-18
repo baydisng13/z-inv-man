@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const productId = searchParams.get("productId");
 
-  let query = (await db.select().from(inventoryStock).leftJoin(products, eq(inventoryStock.productId, products.id)));
+  const query = (await db.select().from(inventoryStock).leftJoin(products, eq(inventoryStock.productId, products.id)));
 
 
   const stockLevels = await query;
