@@ -38,7 +38,6 @@ export async function GET(
       receivedAt: purchases.receivedAt,
       createdBy: purchases.createdBy,
       createdAt: purchases.createdAt,
-      //FIXME: this needs to get fixed we don't have updatedAt field in the schema
       updatedAt: purchases.updatedAt,
       supplierName: suppliers.name, // Include supplier name
     })
@@ -90,8 +89,7 @@ export async function PUT(
 
   const updatedPurchase = await db
     .update(purchases)
-    //FIXME: this needs to get fixed we don't have updatedAt filed in the schema 
-    .set({ ...validation.data, updatedAt: new Date() })
+    .set({ ...validation.data, updatedAt: new Date(), totalAmount: validation.data.totalAmount?.toString(), paidAmount: validation.data.paidAmount?.toString(), receivedAt: validation.data.receivedAt ? new Date(validation.data.receivedAt) : null })
     .where(eq(purchases.id, (await params).id))
     .returning();
 
