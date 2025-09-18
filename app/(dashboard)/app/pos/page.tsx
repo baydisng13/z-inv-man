@@ -230,7 +230,7 @@ export default function POSPage() {
   // Handle form submission
   const onSubmit = (data: SalesCreateType) => {
     console.log("Form submitted:", data)
-    for (let item of data.saleItems) {
+    for (const item of data.saleItems) {
       const product = products?.find((p) => p.id === item.productId);
       const productStock = product?.inventory?.quantity ?? 0;
       if (productStock < item.quantity) {
