@@ -23,6 +23,7 @@ import { toast } from "sonner"
 export default function POSPage() {
   const productInputRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const TAX_RATE = 0.15
 
@@ -143,7 +144,31 @@ export default function POSPage() {
     [cartItems, append, update, resetQuickAddAndFocus],
   )
 
-  // Handle quick add form submission
+  const handleSingleClick = useCallback(
+    (product: ProductWithCategoryType) => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
+
+      clickTimeoutRef.current = setTimeout(() => {
+        addToCart(product, 1)
+        clickTimeoutRef.current = null
+      }, 200)
+    },
+    [addToCart],
+  )
+
+  const handleDoubleClick = useCallback(
+    (product: ProductWithCategoryType) => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+        clickTimeoutRef.current = null
+      }
+      addToCart(product, 2)
+    },
+    [addToCart],
+  )
+
   const onQuickAddSubmit = useCallback(() => {
     const { productCode, quantity } = form.getValues("quickAdd")
     const productSearch = form.getValues("productSearch")
@@ -232,6 +257,14 @@ export default function POSPage() {
     document.addEventListener("keydown", handleGlobalKeyDown)
     return () => document.removeEventListener("keydown", handleGlobalKeyDown)
   }, [focusSearchInput])
+
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const { mutate: createSalesOrder, isPending: isCreating, isSuccess: isCreated } = api.Sales.Create.useMutation()
 
@@ -399,8 +432,8 @@ export default function POSPage() {
                     key={product.id}
                     aria-disabled={product.inventory?.quantity === 0}
                     className={` border ${product.inventory?.quantity === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
-                    onClick={() => addToCart(product)}
-                    onDoubleClick={() => addToCart(product, 2)}
+                    onClick={() => handleSingleClick(product)}
+                    onDoubleClick={() => handleDoubleClick(product)}
                   >
                     <CardContent className="py-0">
                       <div className="text-center flex flex-col gap-4 justify-between">
