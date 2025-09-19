@@ -16,12 +16,14 @@ import CustomerTableSkeleton from "@/components/customer-table-skeleton"
 import ReceiptModal from "@/components/purchases/receipt-modal"
 import CsvExportModal from "@/components/csv-export"
 import { saveCSV } from "@/lib/utils"
+import { useSession } from "@/lib/auth-client"
 
 export default function PurchasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const { data: sessionData } = useSession() 
 
   const {
     data: purchasesData,
@@ -87,19 +89,18 @@ export default function PurchasesPage() {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    //TODO: update this based on template
-    const csvData = sortedData.map(purchase => ({
-      ID: purchase.id,
-      Supplier: purchase.supplier.name || purchase.supplierId || 'N/A',
-      'Total Amount': parseFloat(purchase.totalAmount).toFixed(2),
-      'Paid Amount': parseFloat(purchase.paidAmount).toFixed(2),
-      'Payment Status': purchase.paymentStatus,
-      'Order Status': purchase.status,
-      'Received Date': purchase.receivedAt ? new Date(purchase.receivedAt).toLocaleDateString() : '-',
-      'Created Date': new Date(purchase.createdAt).toLocaleDateString()
-    }));
+    const csvData = sortedData.flatMap(purchase =>
+      purchase.items.map(item => ({
+        'Item': item.product?.name || 'N/A',
+        'Qty': item.quantity,
+        'Purchasing price': parseFloat(item.costPrice).toFixed(2),
+        'Total price': (item.quantity * parseFloat(item.costPrice)).toFixed(2),
+      }))
+    );
 
-    const csvContent = Papa.unparse(csvData);
+    const header = `${sessionData?.user?.name} - Purchase Inventory Report - ${startDate} to ${endDate}\n\n`;
+
+    const csvContent = header + Papa.unparse(csvData);
     saveCSV(csvContent, { download: `purchases_${startDate}_to_${endDate}.csv` })
   }
 
