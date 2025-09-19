@@ -4,8 +4,23 @@ import { test, expect } from "@playwright/test";
 test.describe("Sales API", () => {
   let adminCookies: string;
 
+  const category = {
+    name: "Test Category",
+  };
+
+  let categoryId: string;
+
   test.beforeAll(async ({ request }) => {
     adminCookies = await getTestAdminCookies(request);
+    const createCategoryRes = await request.post("/api/categories", {
+      data: category,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createCategoryRes.ok()).toBeTruthy();
+    const createdCategory = await createCategoryRes.json();
+    categoryId = createdCategory.id;
   });
 
   test.beforeEach(async ({ page }) => {
@@ -19,6 +34,7 @@ test.describe("Sales API", () => {
       barcode: "SALE12345",
       unit: "pcs",
       sellingPrice: 50.00,
+      categoryId: categoryId,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -80,6 +96,7 @@ test.describe("Sales API", () => {
       barcode: "SALERET123",
       unit: "pcs",
       sellingPrice: 25.00,
+      categoryId: categoryId,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -149,6 +166,7 @@ test.describe("Sales API", () => {
       barcode: "SALEPAY123",
       unit: "pcs",
       sellingPrice: 10.00,
+      categoryId: categoryId,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -214,25 +232,12 @@ test.describe("Sales API", () => {
   test("should fail to create sale with exceeded stock", async ({ request }) => {
     // Create a product
 
-    //create new category before creating new product
-    const newCategory = {
-      name: "Sale Exceeded Stock Test Category",
-    };
-    const createCategoryRes = await request.post("/api/categories", {
-      data: newCategory,
-      headers: {
-        Cookie: adminCookies,
-      },
-    });
-    expect(createCategoryRes.ok()).toBeTruthy();
-    const category = await createCategoryRes.json();
-
     const newProduct = {
       name: "Sale Exceeded Stock Test Product",
       barcode: "SALEEX123",
       unit: "pcs",
       sellingPrice: 10.00,
-      categoryId: category.id,
+      categoryId: categoryId,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
