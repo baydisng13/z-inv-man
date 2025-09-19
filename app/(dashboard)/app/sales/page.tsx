@@ -14,11 +14,14 @@ import { Search, Plus, Filter } from "lucide-react";
 import Papa from "papaparse";
 import CsvExportModal from "@/components/csv-export";
 import { saveCSV } from "@/lib/utils";
+import { useSession } from "@/lib/auth-client";
 
 export default function SalesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const { data } = useSession()
 
   const {
     data: sales,
@@ -37,6 +40,9 @@ export default function SalesPage() {
       return matchesSearch && matchesPaymentStatus && matchesStatus;
     })
     : [];
+
+
+  console.log(filteredSales)
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
@@ -84,20 +90,19 @@ export default function SalesPage() {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    //TODO: update this based on template
-    const csvData = sortedData.map(sale => ({
-      ID: sale.id,
-      Customer: sale.customerName || 'N/A',
-      Subtotal: parseFloat(sale.subtotal.toString()).toFixed(2),
-      Discount: parseFloat(sale.discount.toString()).toFixed(2),
-      'Total Amount': parseFloat(sale.totalAmount.toString()).toFixed(2),
-      'Paid Amount': parseFloat(sale.paidAmount.toString()).toFixed(2),
-      'Payment Status': sale.paymentStatus,
-      Status: sale.status,
-      'Created Date': new Date(sale.createdAt).toLocaleDateString()
-    }));
+    const csvData = sortedData.flatMap(sale =>
+      sale.saleItems?.map(item => ({
+        'የተሸጠዉ የቁት አይነት': item.category,
+        'ብራንድ': item.productName,
+        'መለኪያ፣': item?.unit,
+        'የእቃ መጠን': item.quantity,
+        'ታክስን ሳይጨምር': parseFloat(sale.subtotal.toString()).toFixed(2),
+      })) || []
+    );
 
-    const csvContent = Papa.unparse(csvData);
+
+    const header = `${data?.user?.name} - Sales Report - ${startDate} to ${endDate}\n\n`;
+    const csvContent = header + Papa.unparse(csvData);
 
     saveCSV(csvContent, { download: `sales_${startDate}_to_${endDate}.csv` })
   }

@@ -17,26 +17,49 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const allSales = await db.select({
-      id: sales.id,
-      customerId: sales.customerId,
-      subtotal: sql<number>`CAST(${sales.subtotal} AS NUMERIC)`,
-      discount: sql<number>`CAST(${sales.discount} AS NUMERIC)`,
-      totalAmount: sql<number>`CAST(${sales.totalAmount} AS NUMERIC)`,
-      paidAmount: sql<number>`CAST(${sales.paidAmount} AS NUMERIC)`,
-      paymentStatus: sales.paymentStatus,
-      status: sales.status,
-      taxAmount: sql<number>`CAST(${sales.taxAmount} AS NUMERIC)`,
-      includeTax: sales.includeTax,
-      createdBy: sales.createdBy,
-      createdAt: sales.createdAt,
-      updatedAt: sales.updatedAt,
-      customerName: customers.name, // Select customer name directly
-    })
-      .from(sales)
-      .leftJoin(customers, eq(sales.customerId, customers.id)); // Join with customers table
+    const allSales = await db.query.sales.findMany({
+      with: {
+        customer: true,
+        saleItems: {
+          with: {
+            product: {
+              with: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    return NextResponse.json(allSales);
+    const transformedSales = allSales.map(sale => ({
+      id: sale.id,
+      customerId: sale.customerId,
+      subtotal: parseFloat(sale.subtotal),
+      discount: parseFloat(sale.discount),
+      totalAmount: parseFloat(sale.totalAmount),
+      paidAmount: parseFloat(sale.paidAmount),
+      paymentStatus: sale.paymentStatus,
+      status: sale.status,
+      taxAmount: parseFloat(sale.taxAmount),
+      includeTax: sale.includeTax,
+      createdBy: sale.createdBy,
+      createdAt: sale.createdAt,
+      updatedAt: sale.updatedAt,
+      customerName: sale.customer?.name,
+      saleItems: sale.saleItems.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        productName: item.product?.name,
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.unitPrice),
+        total: parseFloat(item.total),
+        unit: item.product.unit,
+        category: item.product.category,
+      })),
+    }));
+
+    return NextResponse.json(transformedSales);
   } catch (error) {
     console.error("Error fetching sales:", error);
     return NextResponse.json({ message: "Error fetching sales", error: error }, { status: 500 });
