@@ -36,10 +36,10 @@ export async function GET(
   const sale = await db.query.sales.findMany({
     where: (sales, { eq }) => eq(sales.id, params.id),
     with: {
-      customer: true, // fetch the related customer
+      customer: true,
       saleItems: {
         with: {
-          product: true, // fetch the product for each sale item
+          product: true,
         },
       },
     },
@@ -50,9 +50,20 @@ export async function GET(
   }
 
   const items = await db
-    .select()
+    .select({
+      id: saleItems.id,
+      quantity: saleItems.quantity,
+      unitPrice: saleItems.unitPrice,
+      saleId: saleItems.saleId,
+      productId: saleItems.productId,
+      total: saleItems.total,
+      productName: products.name,
+    })
     .from(saleItems)
-    .where(eq(saleItems.saleId, params.id));
+    .where(eq(saleItems.saleId, params.id))
+    .leftJoin(products, eq(saleItems.productId, products.id));
+
+  console.dir(items, { depth: Infinity })
 
   return NextResponse.json({ ...sale[0], saleItems: items });
 }

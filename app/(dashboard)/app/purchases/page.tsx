@@ -32,10 +32,13 @@ export default function PurchasesPage() {
     error,
   } = api.Purchase.GetAll.useQuery();
 
+
+  console.log('purchse data', purchasesData)
+
   const filteredPurchases = purchasesData
     ? purchasesData.filter((purchase) => {
         // Assuming supplier name will be joined or fetched separately later
-        const supplierName = purchase.supplier.name || purchase.supplierId || ""; // Use supplierId as placeholder
+      const supplierName = purchase?.supplier?.name || purchase?.supplierId || ""; // Use supplierId as placeholder
         const matchesSearch = supplierName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesPaymentStatus = paymentStatusFilter === "all" || purchase.paymentStatus === paymentStatusFilter;
         const matchesStatus = statusFilter === "all" || purchase.status === statusFilter;
@@ -171,7 +174,7 @@ export default function PurchasesPage() {
           <TableBody>
             {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
-                <TableCell  className="font-medium">{purchase.supplier.name || purchase.supplierId || "N/A"}</TableCell>
+                <TableCell className="font-medium">{purchase?.supplier?.name || purchase?.supplierId || "N/A"}</TableCell>
                 <TableCell  >${parseFloat(purchase.totalAmount).toFixed(2)}</TableCell>
                 <TableCell >${parseFloat(purchase.paidAmount).toFixed(2)}</TableCell>
                 <TableCell >{getPaymentStatusBadge(purchase.paymentStatus)}</TableCell>

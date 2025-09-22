@@ -5,6 +5,7 @@ import { eq, and, or, like, asc, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
+import { ProductWithCategoryType } from "@/schemas/product-schema";
 
 const productSchema = z.object({
   name: z.string().min(1),
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       with: {
         createdByUser: true,
         category: true,
-        inventory: true
+        inventoryRecords: true
       },
       orderBy: (table) => {
         return sortField === "price"
@@ -78,14 +79,16 @@ export async function POST(req: NextRequest) {
     })
     .returning();
 
-  const newInventory = await db
-    .insert(inventoryStock)
-    .values({
-      productId: newProduct[0].id,
-      quantity: 0,
-    })
-    .returning();
-  console.log("New Inventory Record:", newInventory);
+
+  // hmm, i guess we don't need this right ? 
+  // const newInventory = await db
+  //   .insert(inventoryStock)
+  //   .values({
+  //     productId: newProduct[0].id,
+  //     quantity: 0,
+  //   })
+  //   .returning();
+  // console.log("New Inventory Record:", newInventory);
 
   return NextResponse.json(newProduct[0]);
 }

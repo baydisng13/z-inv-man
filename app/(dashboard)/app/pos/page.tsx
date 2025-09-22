@@ -232,7 +232,7 @@ export default function POSPage() {
     console.log("Form submitted:", data)
     for (let item of data.saleItems) {
       const product = products?.find((p) => p.id === item.productId);
-      const productStock = product?.inventory?.quantity ?? 0;
+      const productStock = product?.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0) ?? 0;
       if (productStock < item.quantity) {
         toast.error(`Requested quantity for ${product?.name ?? "product"} exceeded stock`);
         return;
@@ -396,10 +396,10 @@ export default function POSPage() {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-xs text-green-600">${product.sellingPrice}</span>
                           <Badge
-                            variant={product.inventory.quantity < 20 ? "destructive" : "secondary"}
+                            variant={product.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0) < 20 ? "destructive" : "secondary"}
                             className="text-xs px-1 py-0"
                           >
-                            {product.inventory.quantity}
+                            {product.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0)}
                           </Badge>
                         </div>
                       </div>
@@ -442,7 +442,7 @@ export default function POSPage() {
                   <div className="p-2 space-y-1">
                       {saleItems.map((item, index) => {
                         const productWithStock = products?.find((product) => product.id == item.productId)
-                        const stockQuantity = productWithStock?.inventory.quantity
+                        const stockQuantity = productWithStock?.inventoryRecords.reduce((prev, curr) => prev + curr.quantity, 0)
                         return <div key={item.id} className="border-b border-dashed border-gray-200 pb-1">
                         <div className="flex justify-between items-start text-xs font-mono">
                           <div className="flex-1">

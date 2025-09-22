@@ -38,7 +38,7 @@ export const products = pgTable("products", {
     .notNull(),
 });
 
-export const productRelations = relations(products, ({ one }) => ({
+export const productRelations = relations(products, ({ one, many }) => ({
   createdByUser: one(user, {
     fields: [products.createdBy],
     references: [user.id],
@@ -47,10 +47,7 @@ export const productRelations = relations(products, ({ one }) => ({
     fields: [products.categoryId],
     references: [categories.id],
   }),
-  inventory: one(inventoryStock, {
-    fields: [products.id],
-    references: [inventoryStock.productId], // FIXED
-  }),
+  inventoryRecords: many(inventoryStock),
 }));
 
 ///////////////////////
@@ -74,17 +71,28 @@ export const inventoryStock = pgTable("inventory_stock", {
   productId: uuid("product_id")
     .references(() => products.id)
     .notNull(),
+  purchaseId: uuid("purchase_id")
+    .references(() => purchases.id)
+    .notNull(),
   quantity: integer("quantity").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   lastUpdatedAt: timestamp("last_updated_at", {
     withTimezone: true,
   }).defaultNow(),
 });
 
-export const inventoryStockRelations = relations(inventoryStock, ({ one }) => ({
+export const inventoryStockRelations = relations(inventoryStock, ({ one, many }) => ({
   product: one(products, {
     fields: [inventoryStock.productId],
     references: [products.id],
   }),
+  purchase: one(purchases, {
+    fields: [inventoryStock.purchaseId],
+    references: [purchases.id],
+  }),
+  saleAllocations: many(saleItemInventory),
 }));
 
 ///////////////////////
@@ -220,7 +228,7 @@ export const saleItems = pgTable("sale_items", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
 });
 
-export const saleItemsRelations = relations(saleItems, ({ one }) => ({
+export const saleItemsRelations = relations(saleItems, ({ one, many }) => ({
   sale: one(sales, {
     fields: [saleItems.saleId],
     references: [sales.id],
@@ -228,6 +236,33 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   product: one(products, {
     fields: [saleItems.productId],
     references: [products.id],
+  }),
+  inventoryAllocations: many(saleItemInventory),
+}));
+
+export const saleItemInventory = pgTable("sale_item_inventory", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  saleItemId: uuid("sale_item_id")
+    .references(() => saleItems.id)
+    .notNull(),
+  inventoryStockId: uuid("inventory_stock_id")
+    .references(() => inventoryStock.id)
+    .notNull(),
+  quantityUsed: integer("quantity_used").notNull(),
+  costPrice: decimal("cost_price", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const saleItemInventoryRelations = relations(saleItemInventory, ({ one }) => ({
+  saleItem: one(saleItems, {
+    fields: [saleItemInventory.saleItemId],
+    references: [saleItems.id],
+  }),
+  inventoryStock: one(inventoryStock, {
+    fields: [saleItemInventory.inventoryStockId],
+    references: [inventoryStock.id],
   }),
 }));
 

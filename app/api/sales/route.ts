@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { sales, saleItems, customers, products, inventoryStock } from "@/db/schema/product-schema";
+import { sales, saleItems, customers, products, inventoryStock, saleItemInventory } from "@/db/schema/product-schema";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, asc } from "drizzle-orm";
 import { salesFormSchema } from "@/schemas/sales-schema";
 
 export async function GET(req: NextRequest) {
@@ -25,6 +25,15 @@ export async function GET(req: NextRequest) {
             product: {
               with: {
                 category: true,
+              },
+            },
+            inventoryAllocations: {
+              with: {
+                inventoryStock: {
+                  with: {
+                    purchase: true,
+                  },
+                },
               },
             },
           },
@@ -54,8 +63,14 @@ export async function GET(req: NextRequest) {
         quantity: item.quantity,
         unitPrice: parseFloat(item.unitPrice),
         total: parseFloat(item.total),
-        unit: item.product.unit,
-        category: item.product.category,
+        unit: item.product?.unit,
+        category: item.product?.category,
+        inventoryAllocations: item.inventoryAllocations?.map(allocation => ({
+          inventoryStockId: allocation.inventoryStock?.id,
+          quantityUsed: allocation.quantityUsed,
+          costPrice: parseFloat(allocation.costPrice),
+          purchaseId: allocation.inventoryStock?.purchaseId,
+        })) || [],
       })),
     }));
 
@@ -85,13 +100,27 @@ export async function POST(req: NextRequest) {
   const { saleItems: saleItemsData, ...saleData } = validation.data;
 
   const requestedQuantityExceededCheck = (await Promise.all(saleItemsData.map(async (item) => {
-    const query = (await db.select().from(inventoryStock).where(eq(inventoryStock.productId, item.productId)).leftJoin(products, eq(inventoryStock.productId, products.id)))
-    if (query[0].inventory_stock.quantity < item.quantity) return {
-      productName: query[0].products?.name,
-      exceeded: true
+    // how many quantty we have since
+    const totalQuantity = await db.select({
+      total: sql<number>`COALESCE(SUM(${inventoryStock.quantity}), 0)`
+    })
+      .from(inventoryStock)
+      .where(eq(inventoryStock.productId, item.productId));
+
+    const availableQuantity = totalQuantity[0]?.total || 0;
+
+    if (availableQuantity < item.quantity) {
+      const product = await db.select({ name: products.name })
+        .from(products)
+        .where(eq(products.id, item.productId));
+
+      return {
+        productName: product[0]?.name,
+        exceeded: true
+      }
     }
     return {
-      productName: query[0].products?.name,
+      productName: null,
       exceeded: false
     }
   }))).filter(({ exceeded }) => exceeded)
@@ -103,6 +132,9 @@ export async function POST(req: NextRequest) {
       : `requested quantities for the following products exceed available stock: ${exceededProducts.join(", ")}.`;
     return NextResponse.json({ message }, { status: 400 });
   }
+
+
+
 
   try {
     const newSale = await db.transaction(async (tx) => {
@@ -125,27 +157,95 @@ export async function POST(req: NextRequest) {
 
       const saleId = insertedSale.id;
 
-      const newSaleItems = saleItemsData.map((item) => ({
-        saleId,
-        productId: item.productId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice.toString(),
-        total: item.total.toString(),
-      }));
+      const allSaleItems = [];
+      const allInventoryAllocations = [];
 
-      await Promise.all(
-        newSaleItems.map((item) =>
-          tx
+      for (const saleItemData of saleItemsData) {
+        const saleItem = {
+          saleId,
+          productId: saleItemData.productId,
+          quantity: saleItemData.quantity,
+          unitPrice: saleItemData.unitPrice.toString(),
+          total: (saleItemData.quantity * saleItemData.unitPrice).toString(),
+        };
+
+        allSaleItems.push(saleItem);
+
+        const availableInventory = await tx
+          .select()
+          .from(inventoryStock)
+          .where(
+            and(
+              eq(inventoryStock.productId, saleItemData.productId),
+              sql`${inventoryStock.quantity} > 0`
+            )
+          )
+          .orderBy(asc(inventoryStock.createdAt));
+
+        let remainingToSell = saleItemData.quantity;
+
+        //8 items
+        //first one has 6 
+        // second one has 4
+
+        //math.min(8, 6) 
+
+        // 6
+
+        // 8 - 6 = 2
+
+        // math.min(2, 4)
+
+
+        for (const inventoryRecord of availableInventory) {
+          if (remainingToSell <= 0) break;
+
+          const quantityToUse = Math.min(remainingToSell, inventoryRecord.quantity);
+
+          allInventoryAllocations.push({
+            saleItemId: "",
+            inventoryStockId: inventoryRecord.id,
+            quantityUsed: quantityToUse,
+            costPrice: "0",
+          });
+
+          await tx
             .update(inventoryStock)
             .set({
-              quantity: sql`${inventoryStock.quantity} - ${item.quantity}`,
-              lastUpdatedAt: new Date(),
+              quantity: inventoryRecord.quantity - quantityToUse,
+              lastUpdatedAt: new Date()
             })
-            .where(eq(inventoryStock.productId, item.productId))
-        )
-      );
+            .where(eq(inventoryStock.id, inventoryRecord.id));
 
-      await tx.insert(saleItems).values(newSaleItems);
+          remainingToSell -= quantityToUse;
+        }
+
+        if (remainingToSell > 0) {
+          const product = await tx
+            .select({ name: products.name })
+            .from(products)
+            .where(eq(products.id, saleItemData.productId));
+
+          throw new Error(`Not enough inventory for product ${product[0]?.name || saleItemData.productId}`);
+        }
+      }
+
+      const insertedSaleItems = await tx.insert(saleItems).values(allSaleItems).returning();
+
+      let allocationIndex = 0;
+      for (const saleItem of insertedSaleItems) {
+        const itemAllocations = allInventoryAllocations.filter(a => a.inventoryStockId);
+        for (const allocation of itemAllocations) {
+          if (allocationIndex < allInventoryAllocations.length) {
+            allInventoryAllocations[allocationIndex].saleItemId = saleItem.id;
+            allocationIndex++;
+          }
+        }
+      }
+
+      if (allInventoryAllocations.length > 0) {
+        await tx.insert(saleItemInventory).values(allInventoryAllocations);
+      }
 
       return insertedSale;
     });
