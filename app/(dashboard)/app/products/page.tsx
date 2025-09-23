@@ -71,7 +71,7 @@ export default function ProductsPage() {
           product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           product.barcode.includes(searchTerm.toLowerCase());
         const matchesUnit = unitFilter === "all" || product.unit === unitFilter;
-        const matchesCategory = categoryFilter === "all" || product.categoryId === Number(categoryFilter);
+        const matchesCategory = categoryFilter === "all" || Number(product.categoryId) === Number(categoryFilter);
         return matchesSearch && matchesUnit && matchesCategory;
       })
       .sort((a, b) => {
@@ -187,7 +187,7 @@ export default function ProductsPage() {
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{product.sellingPrice}</TableCell>
                   <TableCell>
-                    {categories?.find((c) => c.id === product.categoryId)?.name}
+                    {categories?.find((c) => String(c.id) === String(product.categoryId))?.name}
                   </TableCell>
                   <TableCell>
                     <Badge variant={product.isArchived ? "secondary" : "default"}>

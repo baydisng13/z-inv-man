@@ -152,7 +152,7 @@ export default function EditProductModal({ isOpen, onClose, product }: EditProdu
                       isLoading={isLoadingCategories}
                       options={categories?.map((category) => ({
                         label: category.name,
-                        value: category.id,
+                        value: String(category.id),
                       })) || []}
                     />
                   </FormControl>

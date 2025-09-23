@@ -12,7 +12,7 @@ interface ViewSaleModalProps {
 }
 
 export default function ViewSaleModal({ isOpen, onClose, saleId }: ViewSaleModalProps) {
-  const { data: sale, isLoading, isError, error } = api.Sale.GetById.useQuery(saleId);
+  const { data: sale, isLoading, isError, error } = api.Sales.GetById.useQuery(saleId);
 
   if (isLoading) return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -77,12 +77,12 @@ export default function ViewSaleModal({ isOpen, onClose, saleId }: ViewSaleModal
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sale.items?.map((item) => (
-                  <TableRow key={item.id}>
+                {sale.saleItems?.map((item) => (
+                  <TableRow key={item.productId}>
                     <TableCell>{item.productId}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell className="text-right">${parseFloat(item.unitPrice).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(parseFloat(item.unitPrice) * item.quantity).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${(item.unitPrice * item.quantity).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -94,23 +94,23 @@ export default function ViewSaleModal({ isOpen, onClose, saleId }: ViewSaleModal
           <div className="grid grid-cols-2 gap-2 text-right">
             <div>
               <p className="font-medium">Subtotal:</p>
-              <p className="text-lg font-bold">${parseFloat(sale.subtotal).toFixed(2)}</p>
+              <p className="text-lg font-bold">${sale.subtotal.toFixed(2)}</p>
             </div>
             <div>
               <p className="font-medium">Discount:</p>
-              <p className="text-lg font-bold">${parseFloat(sale.discount).toFixed(2)}</p>
+              <p className="text-lg font-bold">${sale.discount.toFixed(2)}</p>
             </div>
             <div>
               <p className="font-medium">Tax Amount:</p>
-              <p className="text-lg font-bold">${parseFloat(sale.taxAmount).toFixed(2)}</p>
+              <p className="text-lg font-bold">${sale.taxAmount.toFixed(2)}</p>
             </div>
             <div>
               <p className="font-medium">Total Amount:</p>
-              <p className="text-lg font-bold">${parseFloat(sale.totalAmount).toFixed(2)}</p>
+              <p className="text-lg font-bold">${sale.totalAmount.toFixed(2)}</p>
             </div>
             <div>
               <p className="font-medium">Paid Amount:</p>
-              <p className="text-lg font-bold">${parseFloat(sale.paidAmount).toFixed(2)}</p>
+              <p className="text-lg font-bold">${sale.paidAmount.toFixed(2)}</p>
             </div>
             <div>
               <p className="font-medium">Payment Status:</p>
