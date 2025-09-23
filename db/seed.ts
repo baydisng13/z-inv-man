@@ -6,7 +6,6 @@ async function main() {
   console.log("Seeding initial config data...");
 
   try {
-    // First, create a system user if it doesn't exist
     await db
       .insert(user)
       .values({
@@ -32,7 +31,10 @@ async function main() {
       })
       .onConflictDoNothing();
 
-    await db.insert(suppliers).values({
+
+  await db
+    .insert(customers)
+    .values({
       id: "00000000-0000-0000-0000-000000000000",
       name: "Unknown Supplier",
       tin_number: "00000000",
@@ -41,14 +43,14 @@ async function main() {
       address: "123 Unknown Street",
       country: "Unknown Country",
       createdBy: "system",
-    })
-      .onConflictDoNothing();
+    }).onConflictDoNothing();
 
     console.log("Seeding complete!");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     throw error;
   }
+
 }
 
 export default main;

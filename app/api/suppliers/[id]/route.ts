@@ -16,7 +16,7 @@ const supplierUpdateSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
       headers: await headers() // you need to pass the headers object.
@@ -29,7 +29,7 @@ export async function GET(
   const supplier = await db
     .select()
     .from(suppliers)
-    .where(eq(suppliers.id, params.id));
+    .where(eq(suppliers.id, (await params).id));
 
   if (supplier.length === 0) {
     return NextResponse.json({ message: "Supplier not found" }, { status: 404 });
@@ -40,7 +40,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
       headers: await headers() // you need to pass the headers object.
@@ -60,7 +60,7 @@ export async function PUT(
   const updatedSupplier = await db
     .update(suppliers)
     .set({ ...validation.data, updatedAt: new Date() })
-    .where(eq(suppliers.id, params.id))
+    .where(eq(suppliers.id, (await params).id))
     .returning();
 
   if (updatedSupplier.length === 0) {
@@ -72,7 +72,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
       headers: await headers() // you need to pass the headers object.
@@ -84,7 +84,7 @@ export async function DELETE(
 
   const deletedSupplier = await db
     .delete(suppliers)
-    .where(eq(suppliers.id, params.id))
+    .where(eq(suppliers.id, (await params).id))
     .returning();
 
   if (deletedSupplier.length === 0) {

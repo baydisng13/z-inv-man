@@ -1,5 +1,5 @@
 {
-  "id": "58cbfe82-4179-4174-88f6-7cb36e451709",
+  "id": "58cbfe82-4179-4174-88f6-7cb36e451709"
   "prevId": "cf167d01-8892-4299-9b1c-76332914c899",
   "version": "7",
   "dialect": "postgresql",
@@ -527,6 +527,7 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+
         }
       },
       "compositePrimaryKeys": {},
@@ -828,6 +829,7 @@
           "primaryKey": false,
           "notNull": true
         },
+
         "quantity": {
           "name": "quantity",
           "type": "integer",

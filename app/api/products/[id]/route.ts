@@ -17,7 +17,7 @@ const productUpdateSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -30,7 +30,7 @@ export async function GET(
   const product = await db
     .select()
     .from(products)
-    .where(eq(products.id, params.id));
+    .where(eq(products.id, (await params).id));
 
   if (product.length === 0) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
@@ -41,7 +41,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -69,7 +69,7 @@ export async function PUT(
         : {}),
       updatedAt: new Date(),
     })
-    .where(eq(products.id, params.id))
+    .where(eq(products.id, (await params).id))
     .returning();
 
   if (updatedProduct.length === 0) {
@@ -81,7 +81,7 @@ export async function PUT(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -100,7 +100,7 @@ export async function PATCH(
   const archivedProduct = await db
     .update(products)
     .set({ isArchived: validation.data.isArchived, updatedAt: new Date() })
-    .where(eq(products.id, params.id))
+    .where(eq(products.id, (await params).id))
     .returning();
 
   if (archivedProduct.length === 0) {
@@ -112,7 +112,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -124,7 +124,7 @@ export async function DELETE(
 
   const deletedProduct = await db
     .delete(products)
-    .where(eq(products.id, params.id))
+    .where(eq(products.id, (await params).id))
     .returning();
 
   if (deletedProduct.length === 0) {

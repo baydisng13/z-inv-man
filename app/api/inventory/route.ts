@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
 
   const productColumns = getTableColumns(products);
 
+  const query = (await db.select().from(inventoryStock).leftJoin(products, eq(inventoryStock.productId, products.id)));
+
+
   let query = db.select({
     productId: inventoryStock.productId,
     totalQuantity: sql<number>`SUM(${inventoryStock.quantity})`,
