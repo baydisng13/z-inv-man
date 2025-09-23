@@ -17,7 +17,7 @@ const purchaseUpdateSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
@@ -42,7 +42,7 @@ export async function GET(
       supplierName: suppliers.name, // Include supplier name
     })
     .from(purchases)
-    .where(eq(purchases.id, params.id))
+    .where(eq(purchases.id, (await params).id))
     .leftJoin(suppliers, eq(purchases.supplierId, suppliers.id));
 
   if (purchase.length === 0) {
@@ -62,7 +62,7 @@ export async function GET(
       productSellingPrice: products.sellingPrice, // Include product selling price
     })
     .from(purchaseItems)
-    .where(eq(purchaseItems.purchaseId, params.id))
+    .where(eq(purchaseItems.purchaseId, (await params).id))
     .leftJoin(products, eq(purchaseItems.productId, products.id));
 
   return NextResponse.json({ ...purchase[0], items });
@@ -70,7 +70,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
       headers: await headers() // you need to pass the headers object.
@@ -89,8 +89,8 @@ export async function PUT(
 
   const updatedPurchase = await db
     .update(purchases)
-    .set({ ...validation.data, updatedAt: new Date() })
-    .where(eq(purchases.id, params.id))
+    .set({ ...validation.data, updatedAt: new Date(), totalAmount: validation.data.totalAmount?.toString(), paidAmount: validation.data.paidAmount?.toString(), receivedAt: validation.data.receivedAt ? new Date(validation.data.receivedAt) : null })
+    .where(eq(purchases.id, (await params).id))
     .returning();
 
   if (updatedPurchase.length === 0) {
@@ -102,7 +102,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
       headers: await headers() // you need to pass the headers object.
@@ -113,11 +113,11 @@ export async function DELETE(
   }
 
   // Delete purchase items first
-  await db.delete(purchaseItems).where(eq(purchaseItems.purchaseId, params.id));
+  await db.delete(purchaseItems).where(eq(purchaseItems.purchaseId, (await params).id));
 
   const deletedPurchase = await db
     .delete(purchases)
-    .where(eq(purchases.id, params.id))
+    .where(eq(purchases.id, (await params).id))
     .returning();
 
   if (deletedPurchase.length === 0) {

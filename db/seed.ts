@@ -18,7 +18,7 @@ async function main() {
       })
       .onConflictDoNothing();
 
-    await db
+  await db
       .insert(customers)
       .values({
         id: "00000000-0000-0000-0000-000000000000",
@@ -29,7 +29,7 @@ async function main() {
         address: "123 Unknown Street",
         country: "Unknown Country",
         createdBy: "system",
-      })
+    })
       .onConflictDoNothing();
 
     await db.insert(suppliers).values({

@@ -58,7 +58,9 @@ export default function UpdateProductPage() {
       form.setValue("name", product?.name);
       form.setValue("description", product?.description);
       form.setValue("unit", product?.unit);
-      product?.sellingPrice &&form.setValue("sellingPrice", parseInt(product?.sellingPrice));
+      if (product?.sellingPrice) {
+        form.setValue("sellingPrice", parseInt(product?.sellingPrice));
+      }
     }
   }, [isSuccess, router]);
 
@@ -106,7 +108,7 @@ export default function UpdateProductPage() {
           <CardTitle>Product Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>x``
+          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}

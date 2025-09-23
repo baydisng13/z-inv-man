@@ -139,6 +139,9 @@ export const purchases = pgTable("purchases", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const purchasesRelations = relations(purchases, ({ one, many }) => ({
