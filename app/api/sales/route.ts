@@ -62,9 +62,9 @@ export async function GET(req: NextRequest) {
         productName: item.product?.name,
         quantity: item.quantity,
         unitPrice: parseFloat(item.unitPrice),
-        total: parseFloat(item.total),
         unit: item.product?.unit,
-        category: item.product?.category,
+        total: parseFloat(item.total),
+        category: item.product?.category?.name,
         inventoryAllocations: item.inventoryAllocations?.map(allocation => ({
           inventoryStockId: allocation.inventoryStock?.id,
           quantityUsed: allocation.quantityUsed,

@@ -1,18 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import {
-  purchases,
-  purchaseItems,
-  suppliers,
-  products,
   inventoryStock,
-  stockMovements,
+  purchaseItems,
+  purchases,
+  stockMovements
 } from "@/db/schema/product-schema";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { eq, sql } from "drizzle-orm";
 import { PurchaseCreateSchema } from "@/schemas/purchase-schema";
+import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 async function IsAuthnticated() {
   try {

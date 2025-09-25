@@ -109,14 +109,14 @@ export default function POSPage() {
   // Add product to cart
   const addToCart = useCallback(
     (product: ProductWithCategoryType, quantity = 1) => {
-      if (product.inventory?.quantity == 0) return
+      if (product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) == 0) return
       const existingItemIndex = cartItems.findIndex((item) => item.productId === product.id)
 
       if (existingItemIndex >= 0) {
         // Update existing item
         const existingItem = cartItems[existingItemIndex]
         const newQuantity = existingItem.quantity + quantity
-        if (newQuantity > product.inventory?.quantity) {
+        if (newQuantity > product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0)) {
           toast.error("Not enough stock")
           return
         }
@@ -193,7 +193,7 @@ export default function POSPage() {
 
   const isProductStockExeceeded = (productId: string, newQuantity: number) => {
     const product = products?.find((p) => p.id === productId);
-    const productStock = product?.inventory?.quantity ?? 0;
+    const productStock = product?.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
     if (productStock < newQuantity) return true
   }
 
@@ -430,8 +430,8 @@ export default function POSPage() {
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
-                    aria-disabled={product.inventory?.quantity === 0}
-                    className={` border ${product.inventory?.quantity === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
+                    aria-disabled={product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) === 0}
+                    className={` border ${product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
                     onClick={() => handleSingleClick(product)}
                     onDoubleClick={() => handleDoubleClick(product)}
                   >

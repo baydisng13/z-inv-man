@@ -92,8 +92,8 @@ export default function SalesPage() {
 
     const csvData = sortedData.flatMap(sale =>
       sale.saleItems?.map(item => ({
-        'የተሸጠዉ የቁት አይነት': item.category,
-        'ብራንድ': item.productName,
+        'የተሸጠዉ የቁት አይነት': item.productName,
+        'ብራንድ': item.category,
         'መለኪያ፣': item?.unit,
         'የእቃ መጠን': item.quantity,
         'ታክስን ሳይጨምር': parseFloat(sale.subtotal.toString()).toFixed(2),

@@ -13,9 +13,9 @@ const inventoryUpdateSchema = z.object({
 
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
-  
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const productColumns = getTableColumns(products);
 
-  let query = db.select({
+  const query = db.select({
     productId: inventoryStock.productId,
     totalQuantity: sql<number>`SUM(${inventoryStock.quantity})`,
     latestUpdated: sql<Date>`MAX(${inventoryStock.lastUpdatedAt})`,
@@ -68,7 +68,6 @@ export async function GET(req: NextRequest) {
   };
 
   const transformInventoryStock = (row: typeof result[0]) => {
-    console.log('row', row)
     return {
       id: row.productId,
       productId: row.productId,
@@ -88,9 +87,9 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
-  
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -110,17 +109,17 @@ type InventoryPostBody = z.infer<typeof inventoryPostBodySchema>;
 
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
-  
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const body : InventoryPostBody = await req.json();
+  const body: InventoryPostBody = await req.json();
 
   inventoryPostBodySchema.parse(body);
-  
+
   const { productId, purchaseId, quantity } = body;
 
   const newInventory = await db

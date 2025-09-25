@@ -7,7 +7,7 @@ export const db = drizzle(process.env.POSTGRES_URL!, {
   schema: { ...authSchema, ...productSchema },
 });
 
-main().catch((err) => {
-  console.error("❌ Seeding failed:", err);
-  process.exit(1);
-});
+// main().catch((err) => {
+//   console.error("❌ Seeding failed:", err);
+//   process.exit(1);
+// });

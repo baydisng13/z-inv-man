@@ -91,7 +91,7 @@ export const Sales = {
         mutationFn: createSalesFn,
         onSuccess: () => {
           toast("Sales created successfully");
-          queryClient.invalidateQueries({ queryKey: ["Sales"]});
+          queryClient.invalidateQueries({ queryKey: ["Sales"] });
         },
         onError: (err) => {
           toast.error(err.response?.data.message || "Failed to create sales");
