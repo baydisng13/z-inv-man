@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { products } from "@/db/schema/product-schema";
+import { categories, inventoryStock, products } from "@/db/schema/product-schema";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -27,16 +27,27 @@ export async function GET(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const product = await db
+  const productData = await db
     .select()
     .from(products)
-    .where(eq(products.id, (await params).id));
+    .where(eq(products.id, (await params).id))
+    .innerJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(inventoryStock, eq(products.id, inventoryStock.productId))
+    .orderBy(desc(products.createdAt));
 
-  if (product.length === 0) {
+  if (productData.length === 0) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
-  return NextResponse.json(product[0]);
+  const product = {
+    ...productData[0].products,
+    category: productData[0].categories,
+    inventoryRecords: productData
+      .filter(row => row.inventory_stock !== null)
+      .map(row => row.inventory_stock)
+  };
+
+  return NextResponse.json(product);
 }
 
 export async function PUT(

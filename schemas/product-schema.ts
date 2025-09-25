@@ -38,7 +38,7 @@ export const ProductUpdateSchema = ProductCreateSchema.partial().extend({
 export type ProductType = z.infer<typeof ProductSchema>;
 export interface ProductWithCategoryType extends ProductType {
   category: CategoryType
-  inventory: InventoryStockType
+  inventoryRecords: InventoryStockType[]
 }
 export type ProductCreateType = z.infer<typeof ProductCreateSchema>;
 export type ProductUpdateType = z.infer<typeof ProductUpdateSchema>;

@@ -3,9 +3,22 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Purchase API", () => {
   let adminCookies: string;
+  let testCategory: any;
 
   test.beforeAll(async ({ request }) => {
     adminCookies = await getTestAdminCookies(request);
+    
+    // Create a test category to use across all tests
+    const newCategory = {
+      name: "Purchase Test Category",
+    };
+    const createCategoryRes = await request.post("/api/categories", {
+      data: newCategory,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    testCategory = await createCategoryRes.json();
   });
 
   test.beforeEach(async ({ page }) => {
@@ -19,6 +32,7 @@ test.describe("Purchase API", () => {
       barcode: "PUR12345",
       unit: "pcs",
       sellingPrice: 50.00,
+      categoryId: testCategory.id,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -77,6 +91,7 @@ test.describe("Purchase API", () => {
       barcode: "PURDET123",
       unit: "pcs",
       sellingPrice: 25.00,
+      categoryId: testCategory.id,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -143,6 +158,7 @@ test.describe("Purchase API", () => {
       barcode: "PURREC123",
       unit: "pcs",
       sellingPrice: 10.00,
+      categoryId: testCategory.id,
     };
     const createProductRes = await request.post("/api/products", {
       data: newProduct,
@@ -200,4 +216,96 @@ test.describe("Purchase API", () => {
     const updatedPurchase = await updateRes.json();
     expect(updatedPurchase.status).toBe("RECEIVED");
   });
+
+  test("should create separate inventory rows for multiple purchases", async ({ request }) => {
+    const newProduct = {
+      name: "Multi Purchase Inventory Test Product",
+      barcode: "MULTIPURCH123",
+      unit: "pcs",
+      sellingPrice: 20.00,
+      categoryId: testCategory.id,
+    };
+    const createProductRes = await request.post("/api/products", {
+      data: newProduct,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createProductRes.ok()).toBeTruthy();
+    const product = await createProductRes.json();
+
+    const newSupplier = {
+      name: "Multi Purchase Test Supplier",
+      email: "multipurch@supplier.com",
+    };
+    const createSupplierRes = await request.post("/api/suppliers", {
+      data: newSupplier,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createSupplierRes.ok()).toBeTruthy();
+    const supplier = await createSupplierRes.json();
+
+    const firstPurchase = {
+      supplierId: supplier.id,
+      totalAmount: 120.00,
+      paidAmount: 120.00,
+      paymentStatus: "PAID",
+      status: "RECEIVED",
+      items: [
+        {
+          productId: product.id,
+          quantity: 6,
+          costPrice: 20.00,
+        },
+      ],
+    };
+
+    const createFirstRes = await request.post("/api/purchases", {
+      data: firstPurchase,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createFirstRes.ok()).toBeTruthy();
+
+    const secondPurchase = {
+      supplierId: supplier.id,
+      totalAmount: 160.00,
+      paidAmount: 160.00,
+      paymentStatus: "PAID",
+      status: "RECEIVED",
+      items: [
+        {
+          productId: product.id,
+          quantity: 8,
+          costPrice: 20.00,
+        },
+      ],
+    };
+
+    const createSecondRes = await request.post("/api/purchases", {
+      data: secondPurchase,
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(createSecondRes.ok()).toBeTruthy();
+
+    const productRes = await request.get(`/api/products/${product.id}`, {
+      headers: {
+        Cookie: adminCookies,
+      },
+    });
+    expect(productRes.ok()).toBeTruthy();
+    const productWithInventory = await productRes.json();
+
+    const inventoryRecords = productWithInventory.inventoryRecords;
+    expect(inventoryRecords.length).toBe(2);
+
+    const quantities = inventoryRecords.map((record: any) => Number(record.quantity)).sort();
+    expect(quantities).toEqual([6, 8]);
+  });
+
 });

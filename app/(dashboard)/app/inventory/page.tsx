@@ -34,12 +34,15 @@ export default function InventoryPage() {
     }
   };
 
+
+  console.log('inventory stocks', inventoryData)
+
   const filteredInventory = inventoryData
     ? inventoryData.filter((item) => {
         const productName = item.products?.name || "";
         const matchesSearch = productName.toLowerCase().includes(searchTerm.toLowerCase());
         
-        const status = item.inventory_stock.quantity === 0 ? "out_of_stock" : (item.inventory_stock.quantity <= 10 ? "low_stock" : "in_stock"); // Using a default threshold of 10
+      const status = item.inventory_stock?.quantity === 0 ? "out_of_stock" : (item?.inventory_stock?.quantity <= 10 ? "low_stock" : "in_stock"); // Using a default threshold of 10
         const matchesStatus = statusFilter === "all" || status === statusFilter;  
         
         return matchesSearch && matchesStatus;
@@ -54,17 +57,17 @@ export default function InventoryPage() {
     },
     {
       title: "Low Stock",
-      value: inventoryData?.filter((item) => item.inventory_stock.quantity <= 10 && item.inventory_stock.quantity > 0).length.toString() || "0",
+      value: inventoryData?.filter((item) => item?.inventory_stock?.quantity <= 10 && item?.inventory_stock?.quantity > 0).length.toString() || "0",
       icon: "⚠️",
     },
     {
       title: "Out of Stock",
-      value: inventoryData?.filter((item) => item.inventory_stock.quantity === 0).length.toString() || "0",
+      value: inventoryData?.filter((item) => item?.inventory_stock?.quantity === 0).length.toString() || "0",
       icon: "🚫",
     },
     {
       title: "Well Stocked",
-      value: inventoryData?.filter((item) => item.inventory_stock.quantity > 10).length.toString() || "0",
+      value: inventoryData?.filter((item) => item?.inventory_stock?.quantity > 10).length.toString() || "0",
       icon: "✅",
     },
   ];
@@ -213,17 +216,17 @@ export default function InventoryPage() {
           </TableHeader>
           <TableBody>
             {filteredInventory.map((item) => (
-              <TableRow key={item.inventory_stock.productId}>
+              <TableRow key={item.inventory_stock?.productId}>
                 <TableCell className="font-medium">{item.products?.name}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    { JSON.stringify(item.inventory_stock.quantity, null, 2) }
-                    {item.inventory_stock.quantity <= 10 && <AlertTriangle className="h-4 w-4 text-orange-500" />}
+                    {JSON.stringify(item?.inventory_stock?.quantity, null, 2)}
+                    {item.inventory_stock?.quantity <= 10 && <AlertTriangle className="h-4 w-4 text-orange-500" />}
                   </div>
                 </TableCell>
                 <TableCell>10</TableCell> {/* Placeholder for low stock threshold */}
-                <TableCell>{getStatusBadge(item.inventory_stock.quantity, 10)}</TableCell>
-                <TableCell>{new Date(item.inventory_stock.lastUpdatedAt).toLocaleDateString()}</TableCell>
+                <TableCell>{getStatusBadge(item.inventory_stock?.quantity, 10)}</TableCell>
+                <TableCell>{new Date(item.inventory_stock?.lastUpdatedAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">
                     Adjust

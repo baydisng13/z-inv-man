@@ -7,6 +7,8 @@ export const saleItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   unitPrice: z.number().min(0, "Unit price must be positive"),
   total: z.number().min(0, "Total must be positive"),
+  unit: z.string().optional(),
+  category: z.string().optional(),
 })
 
 export const salesFormSchema = z.object({
@@ -51,15 +53,15 @@ export const salesSchema = salesFormSchema.pick({
   selectedCategory: true,
   isPaymentOpen: true,
 }).extend({
-    id: z.string().uuid(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
+  id: z.string().uuid(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 })
 
 
 export type SalesCreateType = z.infer<typeof salesFormSchema>
 export type SalesUpdateType = z.infer<typeof salesFormSchema>
-export type SalesType = z.infer<typeof salesSchema> & { customerName?: string } 
+export type SalesType = z.infer<typeof salesSchema> & { customerName?: string }
 
 
 

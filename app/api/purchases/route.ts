@@ -1,18 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import {
-  purchases,
-  purchaseItems,
-  suppliers,
-  products,
   inventoryStock,
-  stockMovements,
+  purchaseItems,
+  purchases,
+  stockMovements
 } from "@/db/schema/product-schema";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { eq, sql } from "drizzle-orm";
 import { PurchaseCreateSchema } from "@/schemas/purchase-schema";
+import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 async function IsAuthnticated() {
   try {
@@ -40,7 +36,7 @@ export async function GET(req: NextRequest) {
       supplier: true,
       items: {
         with: {
-          product: true, 
+          product: true,
         },
       },
     },
@@ -213,12 +209,11 @@ export async function POST(req: NextRequest) {
       if (purchaseData.status === "RECEIVED" && items.length > 0) {
         for (const item of items) {
           await tx
-            .update(inventoryStock)
-            .set({
-              quantity: sql`${inventoryStock.quantity} + ${item.quantity}`,
-              lastUpdatedAt: sql`NOW()`,
+            .insert(inventoryStock).values({
+              productId: item.productId,
+              purchaseId: createdPurchase.id,
+              quantity: item.quantity,
             })
-            .where(eq(inventoryStock.productId, item.productId));
         }
 
         const stockMovementValues = items.map((item) => ({

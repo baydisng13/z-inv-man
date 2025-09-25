@@ -25,7 +25,13 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = (await params).id;
+  const { id } = await params;
+
+  // Validate that id is not undefined
+  if (!id || id === 'undefined') {
+    return NextResponse.json({ message: "Invalid sale ID" }, { status: 400 });
+  }
+
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
   });
@@ -37,10 +43,10 @@ export async function GET(
   const sale = await db.query.sales.findMany({
     where: (sales, { eq }) => eq(sales.id, id),
     with: {
-      customer: true, // fetch the related customer
+      customer: true,
       saleItems: {
         with: {
-          product: true, // fetch the product for each sale item
+          product: true,
         },
       },
     },
@@ -51,9 +57,20 @@ export async function GET(
   }
 
   const items = await db
-    .select()
+    .select({
+      id: saleItems.id,
+      quantity: saleItems.quantity,
+      unitPrice: saleItems.unitPrice,
+      saleId: saleItems.saleId,
+      productId: saleItems.productId,
+      total: saleItems.total,
+      productName: products.name,
+    })
     .from(saleItems)
-    .where(eq(saleItems.saleId, (await params).id));
+    .where(eq(saleItems.saleId, id))
+    .leftJoin(products, eq(saleItems.productId, products.id));
+
+  console.dir(items, { depth: Infinity })
 
   return NextResponse.json({ ...sale[0], saleItems: items });
 }
@@ -62,6 +79,12 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
+  if (!id || id === 'undefined') {
+    return NextResponse.json({ message: "Invalid sale ID" }, { status: 400 });
+  }
+
   const session = await auth.api.getSession({
     headers: await headers(), // you need to pass the headers object.
   });
@@ -88,7 +111,7 @@ const updatedSale = await db
     taxAmount: "00.00",
     updatedAt: new Date(),
   })
-  .where(eq(sales.id, (await params).id))
+  .where(eq(sales.id, id))
   .returning();
 
 

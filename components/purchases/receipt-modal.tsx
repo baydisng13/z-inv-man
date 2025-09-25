@@ -187,11 +187,11 @@ export default function ReceiptModal({ purchase }: { purchase: PurchaseItemWithP
                 </div>
                 <div className="flex justify-between">
                   <span className="text-black">SUPPLIER:</span>
-                  <span>{purchase.supplier.name || 'N/A'}</span>
+                  <span>{purchase?.supplier?.name || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-black">TIN NUMBER:</span>
-                  <span>{purchase.supplier.tin_number || 'N/A'}</span>
+                  <span>{purchase?.supplier?.tin_number || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-black">STATUS:</span>

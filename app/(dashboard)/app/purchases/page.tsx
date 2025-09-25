@@ -8,17 +8,22 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Filter } from "lucide-react"
+import Papa from "papaparse"
 
 import api from "@/apis";
 import NewPurchaseModal from "@/components/purchases/new-purchase-modal"
 import CustomerTableSkeleton from "@/components/customer-table-skeleton"
 import ReceiptModal from "@/components/purchases/receipt-modal"
+import CsvExportModal from "@/components/csv-export"
+import { saveCSV } from "@/lib/utils"
+import { useSession } from "@/lib/auth-client"
 
 export default function PurchasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const { data: sessionData } = useSession() 
 
   const {
     data: purchasesData,
@@ -27,10 +32,13 @@ export default function PurchasesPage() {
     error,
   } = api.Purchase.GetAll.useQuery();
 
+
+  console.log('purchse data', purchasesData)
+
   const filteredPurchases = purchasesData
     ? purchasesData.filter((purchase) => {
         // Assuming supplier name will be joined or fetched separately later
-        const supplierName = purchase.supplier.name || purchase.supplierId || ""; // Use supplierId as placeholder
+      const supplierName = purchase?.supplier?.name || purchase?.supplierId || ""; // Use supplierId as placeholder
         const matchesSearch = supplierName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesPaymentStatus = paymentStatusFilter === "all" || purchase.paymentStatus === paymentStatusFilter;
         const matchesStatus = statusFilter === "all" || purchase.status === statusFilter;
@@ -67,6 +75,38 @@ export default function PurchasesPage() {
   if (isLoading) return <CustomerTableSkeleton />;
   if (isError) return <div>Error loading purchase orders: {error?.message}</div>;
 
+  function onExport(startDate: string, endDate: string) {
+    if (!purchasesData) return;
+
+    const filteredData = purchasesData.filter((purchase) => {
+      const purchaseDate = new Date(purchase.createdAt);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      end.setHours(23, 59, 59, 999);
+
+      return purchaseDate >= start && purchaseDate <= end;
+    });
+
+    const sortedData = filteredData.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const csvData = sortedData.flatMap(purchase =>
+      purchase.items.map(item => ({
+        'Item': item.product?.name || 'N/A',
+        'Qty': item.quantity,
+        'Purchasing price': parseFloat(item.costPrice).toFixed(2),
+        'Total price': (item.quantity * parseFloat(item.costPrice)).toFixed(2),
+      }))
+    );
+
+    const header = `${sessionData?.user?.name} - Purchase Inventory Report - ${startDate} to ${endDate}\n\n`;
+
+    const csvContent = header + Papa.unparse(csvData);
+    saveCSV(csvContent, { download: `purchases_${startDate}_to_${endDate}.csv` })
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -74,7 +114,12 @@ export default function PurchasesPage() {
           <h1 className="text-3xl font-bold">Purchase Orders</h1>
           <p className="text-muted-foreground">Manage your purchase orders and supplier relationships</p>
         </div>
-        <NewPurchaseModal />
+
+        <div className="flex justify-center gap-2">
+          <CsvExportModal onExport={onExport} />
+          <NewPurchaseModal />
+        </div>
+
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -129,7 +174,7 @@ export default function PurchasesPage() {
           <TableBody>
             {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
-                <TableCell  className="font-medium">{purchase.supplier.name || purchase.supplierId || "N/A"}</TableCell>
+                <TableCell className="font-medium">{purchase?.supplier?.name || purchase?.supplierId || "N/A"}</TableCell>
                 <TableCell  >${parseFloat(purchase.totalAmount).toFixed(2)}</TableCell>
                 <TableCell >${parseFloat(purchase.paidAmount).toFixed(2)}</TableCell>
                 <TableCell >{getPaymentStatusBadge(purchase.paymentStatus)}</TableCell>

@@ -11,11 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Filter } from "lucide-react";
+import Papa from "papaparse";
+import CsvExportModal from "@/components/csv-export";
+import { saveCSV } from "@/lib/utils";
+import { useSession } from "@/lib/auth-client";
 
 export default function SalesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const { data } = useSession()
 
   const {
     data: sales,
@@ -26,14 +32,17 @@ export default function SalesPage() {
 
   const filteredSales = sales
     ? sales.filter((sale) => {
-        const matchesSearch =
-          sale.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesPaymentStatus =
-          paymentStatusFilter === "all" || sale.paymentStatus === paymentStatusFilter;
-        const matchesStatus = statusFilter === "all" || sale.status === statusFilter;
-        return matchesSearch && matchesPaymentStatus && matchesStatus;
-      })
+      const matchesSearch =
+        sale.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPaymentStatus =
+        paymentStatusFilter === "all" || sale.paymentStatus === paymentStatusFilter;
+      const matchesStatus = statusFilter === "all" || sale.status === statusFilter;
+      return matchesSearch && matchesPaymentStatus && matchesStatus;
+    })
     : [];
+
+
+  console.log(filteredSales)
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
@@ -64,6 +73,40 @@ export default function SalesPage() {
   if (isLoading) return <CustomerTableSkeleton />;
   if (isError) return <div>Error loading sales orders: {error?.message}</div>;
 
+  function onExport(startDate: string, endDate: string) {
+    if (!sales) return;
+
+    const filteredData = sales.filter((sale) => {
+      const saleDate = new Date(sale.createdAt);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      end.setHours(23, 59, 59, 999);
+
+      return saleDate >= start && saleDate <= end;
+    });
+
+    const sortedData = filteredData.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const csvData = sortedData.flatMap(sale =>
+      sale.saleItems?.map(item => ({
+        'የተሸጠዉ የቁት አይነት': item.productName,
+        'ብራንድ': item.category,
+        'መለኪያ፣': item?.unit,
+        'የእቃ መጠን': item.quantity,
+        'ታክስን ሳይጨምር': parseFloat(sale.subtotal.toString()).toFixed(2),
+      })) || []
+    );
+
+
+    const header = `${data?.user?.name} - Sales Report - ${startDate} to ${endDate}\n\n`;
+    const csvContent = header + Papa.unparse(csvData);
+
+    saveCSV(csvContent, { download: `sales_${startDate}_to_${endDate}.csv` })
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -71,12 +114,15 @@ export default function SalesPage() {
           <h1 className="text-3xl font-bold">Sales Orders</h1>
           <p className="text-muted-foreground">Track your sales and customer transactions</p>
         </div>
-        <Link href="/sales/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Sale
-          </Button>
-        </Link>
+        <div className="flex justify-center gap-2">
+          <CsvExportModal onExport={onExport} />
+          <Link href="/sales/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Sale
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">

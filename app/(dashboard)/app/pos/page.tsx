@@ -109,14 +109,14 @@ export default function POSPage() {
   // Add product to cart
   const addToCart = useCallback(
     (product: ProductWithCategoryType, quantity = 1) => {
-      if (product.inventory?.quantity == 0) return
+      if (product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) == 0) return
       const existingItemIndex = cartItems.findIndex((item) => item.productId === product.id)
 
       if (existingItemIndex >= 0) {
         // Update existing item
         const existingItem = cartItems[existingItemIndex]
         const newQuantity = existingItem.quantity + quantity
-        if (newQuantity > product.inventory?.quantity) {
+        if (newQuantity > product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0)) {
           toast.error("Not enough stock")
           return
         }
@@ -193,7 +193,7 @@ export default function POSPage() {
 
   const isProductStockExeceeded = (productId: string, newQuantity: number) => {
     const product = products?.find((p) => p.id === productId);
-    const productStock = product?.inventory?.quantity ?? 0;
+    const productStock = product?.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
     if (productStock < newQuantity) return true
   }
 
@@ -279,7 +279,7 @@ export default function POSPage() {
     console.log("Form submitted:", data)
     for (const item of data.saleItems) {
       const product = products?.find((p) => p.id === item.productId);
-      const productStock = product?.inventory?.quantity ?? 0;
+      const productStock = product?.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0) ?? 0;
       if (productStock < item.quantity) {
         toast.error(`Requested quantity for ${product?.name ?? "product"} exceeded stock`);
         return;
@@ -430,8 +430,8 @@ export default function POSPage() {
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
-                    aria-disabled={product.inventory?.quantity === 0}
-                    className={` border ${product.inventory?.quantity === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
+                    aria-disabled={product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) === 0}
+                    className={` border ${product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) === 0 ? "opacity-50" : "hover:border-blue-300 hover:scale-105 cursor-pointer hover:shadow-md transition-all duration-100"}`}
                     onClick={() => handleSingleClick(product)}
                     onDoubleClick={() => handleDoubleClick(product)}
                   >
@@ -444,10 +444,10 @@ export default function POSPage() {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-xs text-green-600">${product.sellingPrice}</span>
                           <Badge
-                            variant={product.inventory.quantity < 20 ? "destructive" : "secondary"}
+                            variant={product.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0) < 20 ? "destructive" : "secondary"}
                             className="text-xs px-1 py-0"
                           >
-                            {product.inventory.quantity}
+                            {product.inventoryRecords.reduce((prv, cur) => prv + cur.quantity, 0)}
                           </Badge>
                         </div>
                       </div>
@@ -490,7 +490,7 @@ export default function POSPage() {
                   <div className="p-2 space-y-1">
                       {saleItems.map((item, index) => {
                         const productWithStock = products?.find((product) => product.id == item.productId)
-                        const stockQuantity = productWithStock?.inventory.quantity
+                        const stockQuantity = productWithStock?.inventoryRecords.reduce((prev, curr) => prev + curr.quantity, 0)
                         return <div key={item.id} className="border-b border-dashed border-gray-200 pb-1">
                         <div className="flex justify-between items-start text-xs font-mono">
                           <div className="flex-1">

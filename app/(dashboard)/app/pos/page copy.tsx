@@ -428,13 +428,13 @@ export default function POSPage() {
                         </span>
                         <Badge
                           variant={
-                            product.inventory.quantity < 20
+                            product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0) < 20
                               ? "destructive"
                               : "secondary"
                           }
                           className="text-xs px-1 py-0"
                         >
-                          {product.inventory.quantity}
+                          {product.inventoryRecords.reduce((sum, item) => sum + item.quantity, 0)}
                         </Badge>
                       </div>
                     </div>
