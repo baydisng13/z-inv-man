@@ -75,7 +75,7 @@ export default function PurchasesPage() {
   if (isLoading) return <CustomerTableSkeleton />;
   if (isError) return <div>Error loading purchase orders: {error?.message}</div>;
 
-  function onExport(startDate: string, endDate: string) {
+  function onExport(startDate: string, endDate: string, includTin: boolean) {
     if (!purchasesData) return;
 
     const filteredData = purchasesData.filter((purchase) => {

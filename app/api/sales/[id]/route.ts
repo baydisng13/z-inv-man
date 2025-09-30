@@ -100,19 +100,19 @@ export async function PUT(
     return NextResponse.json(validation.error.errors, { status: 400 });
   }
 
-const updatedSale = await db
-  .update(sales)
-  .set({
-    ...validation.data,
-    subtotal: validation.data.subtotal?.toString(),
-    discount: validation.data.discount?.toString(),
-    totalAmount: validation.data.totalAmount?.toString(),
-    paidAmount: validation.data.paidAmount?.toString(),
-    taxAmount: "00.00",
-    updatedAt: new Date(),
-  })
-  .where(eq(sales.id, id))
-  .returning();
+  const updatedSale = await db
+    .update(sales)
+    .set({
+      ...validation.data,
+      subtotal: validation.data.subtotal?.toString(),
+      discount: validation.data.discount?.toString(),
+      totalAmount: validation.data.totalAmount?.toString(),
+      paidAmount: validation.data.paidAmount?.toString(),
+      taxAmount: "00.00",
+      updatedAt: new Date(),
+    })
+    .where(eq(sales.id, id))
+    .returning();
 
 
   if (updatedSale.length === 0) {
@@ -127,11 +127,24 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+    headers: await headers()
+  })
 
   if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return Response.json({ message: "Unauthorized" }, { status: 401 })
+  }
+
+  const { success } = await auth.api.userHasPermission({
+    headers: await headers(),
+    body: {
+      permissions: {
+        sale: ['delete']
+      }
+    }
+  })
+
+  if (!success) {
+    return NextResponse.json({ message: "You are not authorized to delete please contact the adminstrator" }, { status: 401 })
   }
 
   // Delete sale items first

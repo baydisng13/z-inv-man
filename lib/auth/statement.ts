@@ -16,4 +16,5 @@ export const statement = {
   sale: ["create", "read", "update", "delete", "refund"],
   customer: ["create", "read", "update", "delete"],
   supplier: ["create", "read", "update", "delete"],
+  category: ["create", "read", "update", "delete"],
 } as const;

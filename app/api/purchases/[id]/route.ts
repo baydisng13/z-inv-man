@@ -73,9 +73,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
-  
+
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -104,13 +104,29 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers()
   })
-  
+
   if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return Response.json({ message: "Unauthorized" }, { status: 401 })
   }
+
+  const { success } = await auth.api.userHasPermission({
+    headers: await headers(),
+    body: {
+      permissions: {
+        purchase: ['delete']
+      }
+    }
+  })
+
+  if (!success) {
+    return NextResponse.json({ message: "You are not authorized to delete please contact the adminstrator" }, { status: 401 })
+  }
+
+
 
   // Delete purchase items first
   await db.delete(purchaseItems).where(eq(purchaseItems.purchaseId, (await params).id));

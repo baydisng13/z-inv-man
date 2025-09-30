@@ -455,10 +455,6 @@ export default function POSPage() {
                   </Card>
                 ))}
               </div>
-              <pre>
-                {JSON.stringify(form.watch(), null, 2)}
-                {JSON.stringify(form.formState.errors, null, 2)}
-              </pre>
             </ScrollArea>
 
           </div>

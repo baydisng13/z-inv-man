@@ -3,7 +3,7 @@ import { statement } from "./statement";
 
 // 👤 User Role
 export const user = ac.newRole({
-  product: ["create", "read", "update", "delete"],
+  product: ["create", "read", "update"],
   stock: ["read"],
   sale: ["create", "read"],
   customer: ["create", "read", "update"],
@@ -23,7 +23,7 @@ export const admin = ac.newRole({
   session: ["list", "revoke", "delete"],
   account: ["list", "delete", "update", "create"],
   verification: ["create", "delete", "list"],
-
+  category: ["create", "delete", "read", "update"],
   product: ["create", "read", "update", "delete"],
   stock: ["read"],
   sale: ["create", "read"],
