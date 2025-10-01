@@ -25,6 +25,10 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       run: npx playwright test
+      env:
+         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+         BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+         BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
