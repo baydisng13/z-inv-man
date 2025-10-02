@@ -5,7 +5,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq, sql, and, asc } from "drizzle-orm";
-import { salesFormSchema } from "@/schemas/sales-schema";
+import { salesFormSchema, SalesType } from "@/schemas/sales-schema";
 
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({
@@ -48,18 +48,20 @@ export async function GET(req: NextRequest) {
       discount: parseFloat(sale.discount),
       totalAmount: parseFloat(sale.totalAmount),
       paidAmount: parseFloat(sale.paidAmount),
-      paymentStatus: sale.paymentStatus,
-      status: sale.status,
+      paymentStatus: sale.paymentStatus as "PAID" | "PARTIAL" | "CREDIT",
+      status: sale.status as "DRAFT" | "RECEIVED" | "CANCELLED",
       taxAmount: parseFloat(sale.taxAmount),
       includeTax: sale.includeTax,
       createdBy: sale.createdBy,
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
       customerName: sale.customer?.name,
+      tin_number: sale.customer?.tin_number || undefined,
       saleItems: sale.saleItems.map(item => ({
         id: item.id,
         productId: item.productId,
-        productName: item.product?.name,
+        productCode: item.product?.barcode || "",
+        productName: item.product?.name || "",
         quantity: item.quantity,
         unitPrice: parseFloat(item.unitPrice),
         unit: item.product?.unit,
@@ -72,7 +74,7 @@ export async function GET(req: NextRequest) {
           purchaseId: allocation.inventoryStock?.purchaseId,
         })) || [],
       })),
-    }));
+    }))
 
     return NextResponse.json(transformedSales);
   } catch (error) {

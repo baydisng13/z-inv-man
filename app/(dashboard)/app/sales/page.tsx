@@ -73,7 +73,7 @@ export default function SalesPage() {
   if (isLoading) return <CustomerTableSkeleton />;
   if (isError) return <div>Error loading sales orders: {error?.message}</div>;
 
-  function onExport(startDate: string, endDate: string) {
+  function onExport(startDate: string, endDate: string, includeTin: boolean) {
     if (!sales) return;
 
     const filteredData = sales.filter((sale) => {
@@ -97,6 +97,7 @@ export default function SalesPage() {
         'መለኪያ፣': item?.unit,
         'የእቃ መጠን': item.quantity,
         'ታክስን ሳይጨምር': parseFloat(sale.subtotal.toString()).toFixed(2),
+        ...(includeTin ? { "የግብር ከፋይ መለያ ቁጥር": sale.tin_number } : {})
       })) || []
     );
 

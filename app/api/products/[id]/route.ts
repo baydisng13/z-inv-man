@@ -126,11 +126,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
-
+    headers: await headers()
+  })
   if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return Response.json({ message: "Unauthorized" }, { status: 401 })
+  }
+
+  const { success } = await auth.api.userHasPermission({
+    headers: await headers(),
+    body: {
+      permissions: {
+        product: ['delete']
+      }
+    }
+  })
+
+  if (!success) {
+    return NextResponse.json({ message: "You are not authorized to delete please contact the adminstrator" }, { status: 401 })
   }
 
   const deletedProduct = await db

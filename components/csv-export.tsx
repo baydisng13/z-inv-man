@@ -15,6 +15,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Download } from "lucide-react";
 import { useState } from "react";
@@ -24,6 +25,7 @@ import { z } from "zod";
 const CsvExportSchema = z.object({
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
+    includeTin: z.boolean(),
 }).refine((data) => {
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
@@ -36,7 +38,7 @@ const CsvExportSchema = z.object({
 type CsvExportType = z.infer<typeof CsvExportSchema>;
 
 interface CsvExportModalProps {
-    onExport: (startDate: string, endDate: string) => void;
+    onExport: (startDate: string, endDate: string, includeTin: boolean) => void;
     isExporting?: boolean;
     triggerButton?: React.ReactNode;
 }
@@ -53,11 +55,12 @@ export default function CsvExportModal({
         defaultValues: {
             startDate: "",
             endDate: "",
+            includeTin: false,
         },
     });
 
     async function onSubmit(data: CsvExportType) {
-        onExport(data.startDate, data.endDate);
+        onExport(data.startDate, data.endDate, data.includeTin);
         setIsOpen(false);
         form.reset();
     }
@@ -109,6 +112,26 @@ export default function CsvExportModal({
                                             />
                                         </FormControl>
                                         <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="includeTin"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Include TIN Number
+                                            </FormLabel>
+                                        </div>
                                     </FormItem>
                                 )}
                             />
