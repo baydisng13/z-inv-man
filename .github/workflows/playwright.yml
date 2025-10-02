@@ -6,13 +6,12 @@ on:
       - main
   pull_request:
 
-
 jobs:
   test:
     name: "Playwright Tests"
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -53,7 +52,9 @@ jobs:
           retention-days: 30
 
       - name: Deploy playwright report to Vercel
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        if: ${{ env.VERCEL_TOKEN != '' }}
         run: |
           cd playwright-report
           vercel link --project playwright-reports --yes --token=${{ secrets.VERCEL_TOKEN }}
