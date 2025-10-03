@@ -52,6 +52,7 @@ jobs:
           retention-days: 30
 
       - name: Deploy playwright report on Vercel
+        if: always()
         run: |
           cd playwright-report
           vercel link --project z-inv-man-test --yes --token=${{ secrets.VERCEL_TOKEN }}
