@@ -51,7 +51,7 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-      - name: Deploy playwright report to Vercel
+      - name: Deploy playwright report on Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         if: ${{ env.VERCEL_TOKEN != '' }}
